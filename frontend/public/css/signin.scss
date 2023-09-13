@@ -1,0 +1,49 @@
+@use "theme";
+
+.center-modal {
+  margin: auto;
+  width: 400px;
+  background-color: theme.$header-color;
+  display: flex;
+  flex-direction: column;
+  padding: 0 20px 20px 20px;
+  box-sizing: border-box;
+  border-radius: 5px;
+
+  .modal-title {
+    text-align: center;
+    font-size: 26px;
+    margin-top: 10px;
+  }
+
+  .input-line {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+
+    div {
+      margin-bottom: 5px;
+      font-size: 18px;
+    }
+
+    input {
+      background-color: #0d0d0d;
+      border: 0;
+      padding: 5px;
+      box-sizing: border-box;
+      color: white;
+    }
+  }
+
+  .horizontal-button-container {
+    flex-direction: row-reverse !important;
+    a {
+      color: white;
+      margin: auto auto auto 0;
+    }
+
+    button {
+      width: 200px !important;
+    }
+  }
+}

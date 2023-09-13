@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/css/signin.css" />
+    <link rel="stylesheet" type="text/css" href="/css/theme.css" />
+    <script src="/js/generic.js"></script>
+    <title><%= website_name %> | Register</title>
+  </head>
+  <body>
+    <%- include("partials/header.ejs", {selected: 'home'}) %>
+
+    <div class="page">
+      <div class="center-modal">
+        <div class="modal-title">Register</div>
+        <div class="input-line">
+          <div>Username</div>
+          <input id="username" type="text" />
+        </div>
+        <div class="input-line">
+          <div>Password</div>
+          <input id="password" type="password" />
+        </div>
+        <div class="horizontal-button-container">
+          <button onclick="requestRegister()"><div>Register</div></button>
+          <a href="/login">Login</a>
+        </div>
+      </div>
+    </div>
+
+    <%- include("partials/footer.ejs") %>
+  </body>
+</html>
+
+<script defer src="/js/register.js"></script>

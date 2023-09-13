@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @unique @default(uuid())
+  username String @unique
+  password String
+  role     Role   @default(VISITOR)
+
+  blog_posts BlogPost[]
+  edits      Edit[]
+
+  @@index([username, role])
+}
+
+model BlogPost {
+  id                String     @id @unique @default(uuid())
+  title             String?
+  short_description String?
+  content           String?
+  thumbnail         String?
+  tags              String[]
+  status            PostStatus @default(DRAFT)
+  group             Role       @default(AUTHOR)
+  owner             User?      @relation(fields: [ownerid], references: [id])
+  ownerid           String?
+  edits             Edit[]
+
+  // Dates
+  publish_date DateTime?
+  created_date DateTime  @default(now())
+}
+
+model Edit {
+  id      String  @id @unique @default(uuid())
+  owner   User    @relation(fields: [ownerid], references: [id])
+  ownerid String
+  reason  String? @default("No reason provided.")
+
+  blogpost    BlogPost? @relation(fields: [blogpost_id], references: [id], onDelete: Cascade)
+  blogpost_id String?
+}
+
+enum Role {
+  LOCKED
+  VISITOR
+  AUTHOR
+  ADMIN
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum ProjectStatus {
+  DELAYED
+  IN_PROGRESS
+  SUCCESS
+  FAILURE
+}

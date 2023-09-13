@@ -1,0 +1,79 @@
+body {
+  margin: 0;
+  background-color: #111;
+  color: white;
+}
+
+.header {
+  background-color: #222;
+  width: 100%;
+  height: 50px;
+  display: flex;
+  flex-direction: row;
+  padding: 0 10px;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+}
+.header .left {
+  margin: auto auto auto 0;
+  font-size: 20px;
+  height: 100%;
+}
+.header .left a {
+  width: inherit;
+}
+.header .right {
+  margin: auto 0 auto auto;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+.header .right a:hover,
+.header .right a:focus {
+  background-color: #333;
+}
+.header a {
+  height: 100%;
+  width: 130px;
+  margin: auto 0;
+  display: flex;
+  text-decoration: none;
+  transition: background-color ease-in-out 0.1s;
+}
+.header a div {
+  margin: auto;
+  color: white;
+}
+
+button {
+  background-color: #1c478a;
+  border: 0;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover,
+button:focus {
+  background-color: #122d57;
+}
+
+.page {
+  width: 1000px;
+  min-height: 10px;
+  margin: 0 auto;
+}
+.page .horizontal-button-container {
+  display: flex;
+  flex-direction: row;
+}
+.page .horizontal-button-container button {
+  width: 100px;
+  min-height: 30px;
+}
+
+@media screen and (max-width: 1010px) {
+  .page {
+    width: 100%;
+  }
+}
