@@ -65,6 +65,13 @@ button:focus {
   background-color: #122d57;
 }
 
+button.good {
+  background-color: #015b01;
+}
+button.bad {
+  background-color: #8e0000;
+}
+
 .page {
   width: 1000px;
   min-height: 10px;
@@ -81,6 +88,9 @@ button:focus {
   }
 }
 
+.hidden {
+  display: none !important;
+}
 @media screen and (max-width: 1010px) {
   .page {
     width: 100%;

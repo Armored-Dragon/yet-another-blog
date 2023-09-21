@@ -1,11 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const core = require("./core");
-
-// Check if user registration is allowed via the settings
-function registration() {
-  return true;
-}
+const settings = require("../settings");
 
 async function userRegistration(username, password) {
   if (!username) return { success: false, message: "No username provided" };
@@ -29,4 +25,4 @@ async function userLogin(username, password) {
   return { success: true, data: existing_user.data };
 }
 
-module.exports = { registration, userRegistration, userLogin };
+module.exports = { userRegistration, userLogin };

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/css/admin.css" />
+    <link rel="stylesheet" type="text/css" href="/css/theme.css" />
+    <script src="/js/generic.js"></script>
+    <title><%= website_name %> | Administration</title>
+  </head>
+  <body>
+    <%- include("partials/header.ejs", {selected: 'home'}) %>
+
+    <div class="page">
+      <div class="container">
+        <div class="settings-group">
+          <h1>Accounts</h1>
+          <div class="settings-row">
+            <div class="label">Account registration</div>
+            <div class="button-group">
+              <div class="spinner hidden">
+                <div>↺</div>
+              </div>
+              <% if (!settings.registration_enabled ) { %>
+              <button id="registration_toggle" onclick="toggleState('ACCOUNT_REGISTRATION', true, this.id)" class="bad"><div>Disabled</div></button>
+              <% } else { %>
+              <button id="registration_toggle" onclick="toggleState('ACCOUNT_REGISTRATION', false, this.id)" class="good"><div>Enabled</div></button>
+              <%}%>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%- include("partials/footer.ejs") %>
+  </body>
+</html>
+
+<script defer src="/js/admin.js"></script>

@@ -1,11 +1,10 @@
 const internal = require("./core/internal_api");
 const bcrypt = require("bcrypt");
-const persistent_setting = require("node-persist");
-persistent_setting.init({ dir: "data/" });
+const settings = require("./settings");
 
 async function index(request, response) {
   // Check if the master admin has been created
-  const is_setup_complete = (await persistent_setting.getItem("SETUP_COMPLETE")) || false;
+  const is_setup_complete = (await settings.setupComplete()) || false;
   if (!is_setup_complete) return response.redirect("/register");
 
   response.render("index.ejs", { website_name: process.env.WEBSITE_NAME });
@@ -16,6 +15,13 @@ function register(request, response) {
 }
 function login(request, response) {
   response.render("login.ejs", { website_name: process.env.WEBSITE_NAME });
+}
+async function admin(request, response) {
+  const reg_allowed = await settings.userRegistrationAllowed();
+  response.render("admin.ejs", {
+    website_name: process.env.WEBSITE_NAME,
+    settings: { registration_enabled: reg_allowed },
+  });
 }
 
 async function registerPost(request, response) {
@@ -31,4 +37,15 @@ async function loginPost(request, response) {
   request.session.user = { username: login.data.username, id: login.data.id };
   response.json({ success: true });
 }
-module.exports = { index, register, login, registerPost, loginPost };
+
+async function settingPost(request, response) {
+  const user = await internal.getUser({ id: request.session.user.id });
+
+  if (!user.success) return response.json({ success: false, message: user.message });
+  if (user.data.role !== "ADMIN") return response.json({ success: false, message: "User is not permitted" });
+
+  if (request.body.setting_name === "ACCOUNT_REGISTRATION") settings.setUserRegistrationAllowed(request.body.value);
+
+  response.json({ success: true });
+}
+module.exports = { index, register, login, admin, registerPost, loginPost, settingPost };

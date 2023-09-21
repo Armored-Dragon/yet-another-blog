@@ -1,0 +1,47 @@
+@use "theme";
+
+.container {
+  background-color: theme.$header-color;
+  min-height: 10px;
+  padding: 10px 20px;
+  box-sizing: border-box;
+
+  .settings-group {
+    .settings-row {
+      display: flex;
+      flex-direction: row;
+      padding: 4px;
+      box-sizing: border-box;
+      .label {
+        margin: auto auto auto 0;
+      }
+
+      .button-group {
+        display: flex;
+        flex-direction: row;
+        margin: auto 0 auto auto;
+        .spinner {
+          margin: auto 10px auto auto;
+          animation: spin 1s;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+        }
+        button {
+          height: 30px;
+          padding: 0px 20px;
+        }
+      }
+    }
+    .settings-row:nth-child(even) {
+      background-color: #00000033;
+    }
+  }
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
