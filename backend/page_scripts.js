@@ -7,21 +7,18 @@ async function index(request, response) {
   const is_setup_complete = (await settings.setupComplete()) || false;
   if (!is_setup_complete) return response.redirect("/register");
 
-  response.render("index.ejs", { website_name: process.env.WEBSITE_NAME });
+  response.render("index.ejs", { user: request.session.user || null, website_name: process.env.WEBSITE_NAME });
 }
 
 function register(request, response) {
-  response.render("register.ejs", { website_name: process.env.WEBSITE_NAME });
+  response.render("register.ejs", { user: request.session.user || null, website_name: process.env.WEBSITE_NAME });
 }
 function login(request, response) {
-  response.render("login.ejs", { website_name: process.env.WEBSITE_NAME });
+  response.render("login.ejs", { user: request.session.user || null, website_name: process.env.WEBSITE_NAME });
 }
 async function admin(request, response) {
   const reg_allowed = await settings.userRegistrationAllowed();
-  response.render("admin.ejs", {
-    website_name: process.env.WEBSITE_NAME,
-    settings: { registration_enabled: reg_allowed },
-  });
+  response.render("admin.ejs", { user: request.session.user || null, website_name: process.env.WEBSITE_NAME, settings: { registration_enabled: reg_allowed } });
 }
 
 async function registerPost(request, response) {

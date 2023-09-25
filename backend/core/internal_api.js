@@ -7,7 +7,7 @@ async function registerUser(username, password) {
   const form_valid = await validate.userRegistration(username, password); // Check form for errors
 
   const is_setup_complete = await settings.setupComplete();
-  let role = is_setup_complete ? "ADMIN" : null;
+  let role = is_setup_complete ? undefined : "ADMIN";
 
   // Register the user in the database
   if (registration_allowed && form_valid.success) return await core.registerUser(username, password, { role: role });

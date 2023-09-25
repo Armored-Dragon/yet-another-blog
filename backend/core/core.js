@@ -12,13 +12,11 @@ const s3 = new S3Client({
   region: process.env.S3_REGION,
   endpoint: process.env.S3_ENDPOINT,
 });
+const settings = require("../settings");
 
-const persistent_setting = require("node-persist");
-persistent_setting.init({ dir: "data/" });
-
-async function registerUser(username, password) {
-  const new_user = await prisma.user.create({ data: { username: username, password: password } });
-  await persistent_setting.setItem("SETUP_COMPLETE", true);
+async function registerUser(username, password, options) {
+  const new_user = await prisma.user.create({ data: { username: username, password: password, ...options } });
+  await settings.setSetupComplete();
   if (new_user) return { success: true, message: `Successfully created ${new_user.username}` };
 }
 

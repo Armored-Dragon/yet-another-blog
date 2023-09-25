@@ -8,8 +8,14 @@
     <a class="nav-button" href="/blog">
       <div>Blog</div>
     </a>
-    <a class="nav-button" href="/projects">
-      <div>Projects</div>
+    <% if (user) { %>
+    <a class="nav-button" href="/author/<%= user.username %>">
+      <div>Profile</div>
     </a>
+    <% } else {%>
+    <a class="nav-button" href="/login">
+      <div>Login</div>
+    </a>
+    <% } %>
   </div>
 </div>
