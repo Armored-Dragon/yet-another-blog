@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/css/new-blog.css" />
+    <link rel="stylesheet" type="text/css" href="/css/theme.css" />
+    <script src="/js/generic.js"></script>
+    <title><%= website_name %> | New Blog</title>
+  </head>
+  <body>
+    <%- include("partials/header.ejs", {selected: 'home'}) %>
+
+    <div class="page">
+      <div class="e-header">
+        <div class="e-thumbnail">
+          <img src="/img/.dev/square.png" />
+        </div>
+        <div class="e-description">
+          <input type="text" placeholder="Title..." />
+          <textarea placeholder="Description..."></textarea>
+        </div>
+      </div>
+
+      <div class="e-image-area">
+        <div class="image">
+          <img src="/img/.dev/screenshot.png" />
+        </div>
+      </div>
+
+      <div class="e-content">
+        <textarea placeholder="Tell us about your subject..."></textarea>
+      </div>
+
+      <div class="e-settings">
+        <div class="publish-date">
+          <div>Publish On</div>
+          <input type="date" value="2023-09-26" />
+          <input type="time" value="13:00" step="3600" />
+        </div>
+      </div>
+    </div>
+
+    <%- include("partials/footer.ejs") %>
+  </body>
+</html>
+
+<script defer src="/js/login.js"></script>

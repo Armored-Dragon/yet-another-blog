@@ -43,7 +43,7 @@ app.post("/register", checkNotAuthenticated, page_scripts.registerPost);
 
 // Account Required Endpoints
 app.post("/setting", checkAuthenticated, page_scripts.settingPost);
-// app.get("/blog/new", checkAuthenticated, page_scripts.blogNew);
+app.get("/blog/new", checkAuthenticated, page_scripts.blogNew);
 // app.post("/blog", checkAuthenticated, page_scripts.postBlog);
 // app.delete("/logout", page_scripts.logout);
 
@@ -52,8 +52,9 @@ app.post("/setting", checkAuthenticated, page_scripts.settingPost);
 
 // Endpoints
 app.get("/", page_scripts.index);
+app.get("/author/:author_username", page_scripts.author);
 app.get("/admin", checkAuthenticated, page_scripts.admin);
-// app.get("/blog", page_scripts.blogList);
+app.get("/blog", page_scripts.blogList);
 // app.get("/blog/:id", page_scripts.blogSingle);
 // app.get("/projects", page_scripts.projectList);
 

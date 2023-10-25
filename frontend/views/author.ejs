@@ -7,14 +7,12 @@
     <link rel="stylesheet" type="text/css" href="/css/theme.css" />
     <link rel="stylesheet" type="text/css" href="/css/blog-list.css" />
     <script src="/js/generic.js"></script>
-    <title><%= website_name %> | Home</title>
+    <title><%= website_name %> | Author</title>
   </head>
   <body>
     <%- include("partials/header.ejs", {selected: 'home'}) %>
 
-    <div class="page">
-      <%- include("partials/blog-entry.ejs", {thumbnail: '/img/.dev/square.png', title: 'Title', description: 'Description', author: 'Author'}) %>
-    </div>
+    <div class="page"></div>
 
     <%- include("partials/footer.ejs") %>
   </body>

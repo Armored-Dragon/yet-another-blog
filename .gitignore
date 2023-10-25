@@ -3,3 +3,4 @@
 /data
 *.code-workspace
 .vscode/settings.json
+/frontend/public/img/.dev

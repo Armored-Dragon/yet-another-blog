@@ -13,7 +13,8 @@
     <%- include("partials/header.ejs", {selected: 'home'}) %>
 
     <div class="page">
-      <%- include("partials/blog-entry.ejs", {thumbnail: '/img/.dev/square.png', title: 'Title', description: 'Description', author: 'Author'}) %>
+      <%- include("partials/blog-admin.ejs") %> <%- include("partials/blog-entry.ejs", {thumbnail: '/img/.dev/square.png', title: 'Title', description:
+      'Description', author: 'Author'}) %>
     </div>
 
     <%- include("partials/footer.ejs") %>

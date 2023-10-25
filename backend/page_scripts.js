@@ -9,12 +9,20 @@ async function index(request, response) {
 
   response.render("index.ejs", { user: request.session.user || null, website_name: process.env.WEBSITE_NAME });
 }
-
 function register(request, response) {
   response.render("register.ejs", { user: request.session.user || null, website_name: process.env.WEBSITE_NAME });
 }
 function login(request, response) {
   response.render("login.ejs", { user: request.session.user || null, website_name: process.env.WEBSITE_NAME });
+}
+function author(request, response) {
+  response.render("author.ejs", { user: request.session.user || null, website_name: process.env.WEBSITE_NAME });
+}
+function blogList(request, response) {
+  response.render("blogList.ejs", { user: request.session.user || null, website_name: process.env.WEBSITE_NAME });
+}
+function blogNew(request, response) {
+  response.render("blogNew.ejs", { user: request.session.user || null, website_name: process.env.WEBSITE_NAME });
 }
 async function admin(request, response) {
   const reg_allowed = await settings.userRegistrationAllowed();
@@ -45,4 +53,4 @@ async function settingPost(request, response) {
 
   response.json({ success: true });
 }
-module.exports = { index, register, login, admin, registerPost, loginPost, settingPost };
+module.exports = { index, register, login, author, blogList, blogNew, admin, registerPost, loginPost, settingPost };
