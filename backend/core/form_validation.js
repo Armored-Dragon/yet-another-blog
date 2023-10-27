@@ -1,6 +1,3 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-const core = require("./core");
 const settings = require("../settings");
 
 async function userRegistration(username, password) {
@@ -9,20 +6,16 @@ async function userRegistration(username, password) {
   // TODO: Admin customizable minimum password length
   if (password.length < 4) return { success: false, message: "Password not long enough" };
 
-  const existing_user = await core.getUser({ username: username });
+  // Check if username only uses URL safe characters
+  if (!is_url_safe(username)) return { success: false, message: "Username is not URL safe" };
 
-  if (existing_user.success) return { success: false, message: "Username already exists" };
-
+  // All good! Validation complete
   return { success: true };
 }
 
-async function userLogin(username, password) {
-  const existing_user = await core.getUser({ username: username });
-
-  if (!existing_user.success) return { success: false, message: "User does not exist" };
-  if (existing_user.role === "LOCKED") return { success: false, message: "Account is locked: Contact your administrator" };
-
-  return { success: true, data: existing_user.data };
+function is_url_safe(str) {
+  const pattern = /^[A-Za-z0-9\-_.~]+$/;
+  return pattern.test(str);
 }
 
-module.exports = { userRegistration, userLogin };
+module.exports = { userRegistration };

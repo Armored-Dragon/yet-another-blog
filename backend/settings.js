@@ -1,14 +1,40 @@
 const persistent_setting = require("node-persist");
-persistent_setting.init({ dir: "data/" });
+persistent_setting.init({ dir: "data/site/" });
 
-const setupComplete = async () => (await persistent_setting.getItem("SETUP_COMPLETE")) || false;
-const userRegistrationAllowed = async () => {
-  const setting = await persistent_setting.getItem("REGISTRATION_ALLOWED");
-  if (typeof setting == "undefined") return true;
-  console.log(setting);
-  return setting == "true";
+let settings = {
+  SETUP_COMPLETE: false,
+  ACCOUNT_REGISTRATION: false,
+  BLOG_UPLOADING: false,
+
+  USER_MINIMUM_PASSWORD_LENGTH: 6,
 };
-const setSetupComplete = async () => await persistent_setting.setItem("SETUP_COMPLETE", "true");
-const setUserRegistrationAllowed = (new_value) => persistent_setting.setItem("REGISTRATION_ALLOWED", String(new_value));
 
-module.exports = { setupComplete, userRegistrationAllowed, setSetupComplete, setUserRegistrationAllowed };
+async function act(key, value) {
+  // Change value if we have a value field
+  if (value) {
+    // Just incase the value is a string instead of a boolean
+    value = String(value).toLowerCase() === "true";
+
+    await persistent_setting.setItem(key, value);
+    settings[key] = value;
+  }
+
+  // Return the current setting
+  return settings[key];
+}
+
+function getSettings() {
+  return settings;
+}
+
+// Initialize our settings
+setTimeout(async () => {
+  for (let i = 0; Object.keys(settings).length > i; i++) {
+    const setting_title = Object.keys(settings)[i];
+    const setting_value = await persistent_setting.getItem(setting_title);
+
+    settings[setting_title] = setting_value == true || setting_value == "true";
+  }
+}, 3000);
+
+module.exports = { act, getSettings };

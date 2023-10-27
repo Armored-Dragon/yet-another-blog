@@ -14,9 +14,10 @@ const s3 = new S3Client({
 });
 const settings = require("../settings");
 
+// FIXME: This does not properly validate that a user was created
 async function registerUser(username, password, options) {
   const new_user = await prisma.user.create({ data: { username: username, password: password, ...options } });
-  await settings.setSetupComplete();
+  settings.act("SETUP_COMPLETE", true);
   if (new_user) return { success: true, message: `Successfully created ${new_user.username}` };
 }
 

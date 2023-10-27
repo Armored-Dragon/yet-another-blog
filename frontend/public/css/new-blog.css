@@ -42,6 +42,11 @@
   width: 100%;
   margin-bottom: 10px;
 }
+.e-image-area .placeholder {
+  margin: auto;
+  grid-row: 1/-1;
+  grid-column: 1/-1;
+}
 .e-image-area .image {
   height: 100px;
   aspect-ratio: 16/9;

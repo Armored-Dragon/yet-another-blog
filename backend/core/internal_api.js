@@ -3,35 +3,37 @@ const core = require("./core");
 const settings = require("../settings");
 
 async function registerUser(username, password) {
-  const registration_allowed = await settings.userRegistrationAllowed(); // Check if user registration is allowed
+  // Get current and relevant settings
+  const s = Promise.all([settings.act("ACCOUNT_REGISTRATION"), settings.act("SETUP_COMPLETE")]);
   const form_valid = await validate.userRegistration(username, password); // Check form for errors
 
-  const is_setup_complete = await settings.setupComplete();
-  let role = is_setup_complete ? undefined : "ADMIN";
+  // Set variables for easy reading
+  const registration_allowed = s[0];
+  const setup_complete = s[1];
+
+  if (!registration_allowed && setup_complete) return { success: false, message: "Registration is disabled" }; // Registration disabled
+  if (!form_valid.success) return form_valid; // Registration details did not validate
+
+  // Does a user using that username exist already?
+  const existing_user = await core.getUser({ username: username });
+  if (existing_user.success) return { success: false, message: "Username is taken" };
 
   // Register the user in the database
-  if (registration_allowed && form_valid.success) return await core.registerUser(username, password, { role: role });
+  const role = setup_complete ? undefined : "ADMIN";
+  const registration_status = await core.registerUser(username, password, { role: role });
 
-  // Something went wrong!
-  return { success: false, message: form_valid.message };
+  if (registration_status.success) return registration_status;
+  else return registration_status;
 }
 
 async function loginUser(username, password) {
-  const user = await validate.userLogin(username);
-  if (!user.success) return user;
+  // Get the user by username
+  const existing_user = await core.getUser({ username: username });
 
-  return { success: true, data: { username: user.data.username, id: user.data.id, password: user.data.password } };
+  // Check for errors or problems
+  if (!existing_user.success) return { success: false, message: "User does not exist" };
+  if (existing_user.role === "LOCKED") return { success: false, message: "Account is locked: Contact your administrator" };
+  return { success: true, data: { username: existing_user.data.username, id: existing_user.data.id, password: existing_user.data.password } };
 }
 
-async function getUser({ id, username } = {}) {
-  let user;
-  if (id) user = await core.getUser({ id: id });
-  else if (username) user = await core.getUser({ username: username });
-
-  // Make sure we only get important identifier and nothing sensitive!
-  if (user.success) return { success: true, data: { username: user.data.username, id: user.data.id, role: user.data.role } };
-
-  return { success: false, message: "No user found" };
-}
-
-module.exports = { registerUser, loginUser, getUser };
+module.exports = { registerUser, loginUser };

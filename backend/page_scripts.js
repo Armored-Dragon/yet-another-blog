@@ -4,7 +4,7 @@ const settings = require("./settings");
 
 async function index(request, response) {
   // Check if the master admin has been created
-  const is_setup_complete = (await settings.setupComplete()) || false;
+  const is_setup_complete = (await settings.act("SETUP_COMPLETE")) || false;
   if (!is_setup_complete) return response.redirect("/register");
 
   response.render("index.ejs", { user: request.session.user || null, website_name: process.env.WEBSITE_NAME });
@@ -36,8 +36,10 @@ async function registerPost(request, response) {
 async function loginPost(request, response) {
   const login = await internal.loginUser(request.body.username, request.body.password);
 
+  if (!login.success) return response.json(login);
+
   const password_match = await bcrypt.compare(request.body.password, login.data.password);
-  if (!password_match) return { success: false, message: "Incorrect password" };
+  if (!password_match) return response.json({ success: false, message: "Incorrect password" });
 
   request.session.user = { username: login.data.username, id: login.data.id };
   response.json({ success: true });
