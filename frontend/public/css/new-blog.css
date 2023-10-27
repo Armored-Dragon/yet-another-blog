@@ -32,10 +32,11 @@
 
 .e-image-area {
   background-color: #222;
-  height: 220px;
+  min-height: 200px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   grid-template-rows: auto auto;
+  grid-gap: 4px;
   padding: 5px;
   box-sizing: border-box;
   width: 100%;
@@ -51,14 +52,6 @@
   height: 100%;
   margin: auto;
 }
-.e-image-area .image:nth-child(odd) {
-  grid-row: span 1;
-  grid-column: 1;
-}
-.e-image-area .image:nth-child(even) {
-  grid-row: span 1;
-  grid-column: 2;
-}
 
 .e-content {
   background-color: #222;
@@ -67,6 +60,7 @@
 }
 .e-content textarea {
   font-size: 16px;
+  min-height: 300px;
   color: white;
 }
 

@@ -39,10 +39,11 @@ $background-body: #222;
 
 .e-image-area {
   background-color: $background-body;
-  height: 220px;
+  min-height: 200px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   grid-template-rows: auto auto;
+  grid-gap: 4px;
   padding: 5px;
   box-sizing: border-box;
   width: 100%;
@@ -59,15 +60,6 @@ $background-body: #222;
       margin: auto;
     }
   }
-
-  .image:nth-child(odd) {
-    grid-row: span 1;
-    grid-column: 1;
-  }
-  .image:nth-child(even) {
-    grid-row: span 1;
-    grid-column: 2;
-  }
 }
 
 .e-content {
@@ -76,6 +68,7 @@ $background-body: #222;
   margin-bottom: 10px;
   textarea {
     font-size: 16px;
+    min-height: 300px;
     color: white;
   }
 }
