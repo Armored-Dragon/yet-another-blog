@@ -13,7 +13,9 @@
 }
 .e-header .e-thumbnail img {
   height: 100%;
-  width: 150px;
+  width: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
 }
 .e-header .e-description {
   width: 100%;
@@ -52,10 +54,19 @@
   aspect-ratio: 16/9;
   margin: auto;
   display: flex;
+  position: relative;
 }
 .e-image-area .image img {
   height: 100%;
   margin: auto;
+}
+.e-image-area .image div {
+  position: absolute;
+  right: 0;
+  padding: 5px 10px;
+  box-sizing: border-box;
+  background-color: darkred;
+  cursor: pointer;
 }
 
 .e-content {
@@ -65,18 +76,19 @@
 }
 .e-content textarea {
   font-size: 16px;
-  min-height: 300px;
+  min-height: 200px;
   color: white;
 }
 
 .e-settings {
-  height: 40px;
+  min-height: 40px;
   width: 100%;
   background-color: #222;
   display: flex;
   flex-direction: row;
   padding: 5px;
   box-sizing: border-box;
+  margin-bottom: 1rem;
 }
 .e-settings .publish-date {
   display: flex;
@@ -90,6 +102,16 @@
 .e-settings input,
 .e-settings textarea {
   width: 200px;
+}
+.e-settings .horizontal-buttons {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+.e-settings .horizontal-buttons button {
+  width: 200px;
+  height: 40px;
 }
 
 input,

@@ -28,6 +28,7 @@ $quiet-text: #9f9f9f;
 
   .thumbnail {
     width: 150px;
+    height: 150px;
     img {
       height: 100%;
       width: 100%;
@@ -35,6 +36,8 @@ $quiet-text: #9f9f9f;
   }
 
   .blog-info {
+    display: flex;
+    flex-direction: column;
     .blog-title {
       font-size: 20px;
       border-bottom: 1px solid $quiet-text;
@@ -54,10 +57,46 @@ $quiet-text: #9f9f9f;
     .blog-description {
       color: $quiet-text;
       margin-top: 10px;
+      max-height: 100px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      word-break: none;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .blog-action {
+      display: flex;
+      flex-direction: row;
+      margin-top: auto;
+
+      .date {
+        font-size: 16px;
+        color: gray;
+        margin-right: auto;
+      }
+      a {
+        color: white;
+        font-style: italic;
+      }
     }
   }
 }
 
 .blog-entry:last-of-type {
   margin-bottom: inherit;
+}
+
+@media screen and (max-width: 500px) {
+  .page {
+    .blog-entry {
+      grid-template-columns: 75px auto;
+      margin-bottom: 20px;
+      .thumbnail {
+        width: 75px;
+        height: 75px;
+      }
+    }
+  }
 }

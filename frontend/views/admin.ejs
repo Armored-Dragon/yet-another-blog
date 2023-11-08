@@ -21,10 +21,24 @@
               <div class="spinner hidden">
                 <div>↺</div>
               </div>
-              <% if (!settings.registration_enabled ) { %>
+              <% if (!settings.ACCOUNT_REGISTRATION ) { %>
               <button id="registration_toggle" onclick="toggleState('ACCOUNT_REGISTRATION', true, this.id)" class="bad"><div>Disabled</div></button>
               <% } else { %>
               <button id="registration_toggle" onclick="toggleState('ACCOUNT_REGISTRATION', false, this.id)" class="good"><div>Enabled</div></button>
+              <%}%>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="label">Hide Login</div>
+            <div class="button-group">
+              <div class="spinner hidden">
+                <div>↺</div>
+              </div>
+              <% if (!settings.HIDE_LOGIN ) { %>
+              <button id="hidelogin_toggle" onclick="toggleState('HIDE_LOGIN', true, this.id)" class="bad"><div>Disabled</div></button>
+              <% } else { %>
+              <button id="hidelogin_toggle" onclick="toggleState('HIDE_LOGIN', false, this.id)" class="good"><div>Enabled</div></button>
               <%}%>
             </div>
           </div>

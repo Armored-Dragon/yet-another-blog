@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" type="text/css" href="/css/new-blog.css" />
+    <link rel="stylesheet" type="text/css" href="/css/blogNew.css" />
     <link rel="stylesheet" type="text/css" href="/css/theme.css" />
     <script src="/js/generic.js"></script>
     <title><%= website_name %> | New Blog</title>
@@ -14,27 +14,57 @@
     <div class="page">
       <div class="e-header">
         <div class="e-thumbnail">
+          <%if(existing_blog?.thumbnail) {%>
+          <img src="<%= existing_blog?.thumbnail %>" />
+          <%} else {%>
           <img src="/img/.dev/square.png" />
+          <% } %>
         </div>
         <div class="e-description">
-          <input type="text" placeholder="Title..." />
-          <textarea placeholder="Description..."></textarea>
+          <input id="title" type="text" placeholder="Title..." value="<%= existing_blog.title %>" />
+          <textarea id="description" placeholder="Description..."><%= existing_blog.description %></textarea>
         </div>
       </div>
 
       <div class="e-image-area">
+        <% if(existing_blog.raw_images?.length) { %> <% for (image in existing_blog.raw_images) {%>
+        <div class="image">
+          <img data-image_id="<%=existing_blog.raw_images[image]%>" src="<%= existing_blog.images[image] %>" />
+          <div><a onclick="deleteImage('<%= existing_blog.raw_images[image] %>')">X</a></div>
+        </div>
+        <%}%> <% } else {%>
         <div class="placeholder">Drop images here</div>
+        <% } %>
       </div>
 
       <div class="e-content">
-        <textarea placeholder="Tell us about your subject..."></textarea>
+        <textarea id="content" placeholder="Tell us about your subject..."><%= existing_blog.raw_content %></textarea>
       </div>
 
       <div class="e-settings">
         <div class="publish-date">
           <div>Publish On</div>
-          <input type="date" value="2023-09-26" />
-          <input type="time" value="13:00" step="3600" />
+          <% if(existing_blog.publish_date) {%>
+          <input id="date" type="date" value="<%= existing_blog.publish_date %>" />
+          <%} else { %>
+          <input id="date" type="date" value="1990-01-01" />
+          <% } %>
+          <!--  -->
+          <% if(existing_blog.publish_date) {%>
+          <input id="time" type="time" step="3600" value="<%= existing_blog.publish_time %>" />
+          <%} else { %>
+          <input id="time" type="time" value="13:00" step="3600" />
+          <% } %>
+        </div>
+      </div>
+      <div class="e-settings">
+        <div class="horizontal-buttons">
+          <button onclick="publishBlog(true)" class="yellow"><span>Unlisted</span></button>
+          <% if(existing_blog.id){%>
+          <button onclick="publishBlog(false, true)"><span>Edit</span></button>
+          <% } else {%>
+          <button onclick="publishBlog()"><span>Publish</span></button>
+          <% } %>
         </div>
       </div>
     </div>

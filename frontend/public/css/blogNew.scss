@@ -15,7 +15,8 @@ $background-body: #222;
 
     img {
       height: 100%;
-      width: 150px;
+      width: 100%;
+      object-fit: cover;
     }
   }
 
@@ -60,10 +61,20 @@ $background-body: #222;
     aspect-ratio: 16/9;
     margin: auto;
     display: flex;
+    position: relative;
 
     img {
       height: 100%;
       margin: auto;
+    }
+
+    div {
+      position: absolute;
+      right: 0;
+      padding: 5px 10px;
+      box-sizing: border-box;
+      background-color: darkred;
+      cursor: pointer;
     }
   }
 }
@@ -74,19 +85,20 @@ $background-body: #222;
   margin-bottom: 10px;
   textarea {
     font-size: 16px;
-    min-height: 300px;
+    min-height: 200px;
     color: white;
   }
 }
 
 .e-settings {
-  height: 40px;
+  min-height: 40px;
   width: 100%;
   background-color: $background-body;
   display: flex;
   flex-direction: row;
   padding: 5px;
   box-sizing: border-box;
+  margin-bottom: 1rem;
   .publish-date {
     display: flex;
     div {
@@ -100,6 +112,18 @@ $background-body: #222;
   input,
   textarea {
     width: 200px;
+  }
+
+  .horizontal-buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    button {
+      width: 200px;
+      height: 40px;
+    }
   }
 }
 

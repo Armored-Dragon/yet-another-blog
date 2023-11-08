@@ -4,12 +4,12 @@ const settings = require("../settings");
 
 async function registerUser(username, password) {
   // Get current and relevant settings
-  const s = Promise.all([settings.act("ACCOUNT_REGISTRATION"), settings.act("SETUP_COMPLETE")]);
+  const active_settings = settings.getSettings();
   const form_valid = await validate.userRegistration(username, password); // Check form for errors
 
   // Set variables for easy reading
-  const registration_allowed = s[0];
-  const setup_complete = s[1];
+  const registration_allowed = active_settings.ACCOUNT_REGISTRATION;
+  const setup_complete = active_settings.SETUP_COMPLETE;
 
   if (!registration_allowed && setup_complete) return { success: false, message: "Registration is disabled" }; // Registration disabled
   if (!form_valid.success) return form_valid; // Registration details did not validate
@@ -36,4 +36,25 @@ async function loginUser(username, password) {
   return { success: true, data: { username: existing_user.data.username, id: existing_user.data.id, password: existing_user.data.password } };
 }
 
-module.exports = { registerUser, loginUser };
+async function getBlogList({ id, visibility, owner_id, raw } = {}, { page = 0, limit = 10 } = {}) {
+  const blog_list = await core.getBlogList({ id: id, visibility: visibility, owner_id: owner_id, raw: raw }, { page: page, limit: limit });
+  return blog_list;
+}
+
+async function getUser({ id } = {}) {
+  return await core.getUser({ id: id });
+}
+
+async function postBlog(blog_post, owner_id) {
+  return await core.postBlog(blog_post, owner_id);
+}
+async function deleteBlog(blog_id, owner_id) {
+  return await core.deleteBlog(blog_id, owner_id);
+}
+async function updateBlog(blog_post, requester_id) {
+  return await core.updateBlog(blog_post, requester_id);
+}
+async function deleteImage(image_data, requester_id) {
+  return await core.deleteImage(image_data, requester_id);
+}
+module.exports = { registerUser, loginUser, postBlog, getBlogList, deleteBlog, updateBlog, deleteImage, getUser };

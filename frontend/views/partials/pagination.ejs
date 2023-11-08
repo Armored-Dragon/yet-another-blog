@@ -1,0 +1,29 @@
+<div class="pagination">
+  <% if(pagination.includes(Number(current_page) - 1)) {%>
+  <a href="<%= loaded_page %>?page=<%= Number(current_page) - 1 %>">
+    <span>Previous</span>
+  </a>
+  <% } else {%>
+  <a class="disabled">
+    <span>Previous</span>
+  </a>
+  <%}%>
+
+  <div class="page-list">
+    <% for(page of pagination) { %> <% if (page == current_page) {%>
+    <a href="#" class="active"><span><%=page + 1%></span></a>
+    <% } else { %>
+    <a href="<%= loaded_page %>?page=<%=page %>" class=""><span><%=page + 1%></span></a>
+    <% } %> <% } %>
+  </div>
+
+  <% if(pagination.includes(Number(current_page) + 1)) {%>
+  <a href="<%= loaded_page %>?page=<%= Number(current_page) + 1 %>">
+    <span>Next</span>
+  </a>
+  <% } else {%>
+  <a class="disabled">
+    <span>Next</span>
+  </a>
+  <%}%>
+</div>

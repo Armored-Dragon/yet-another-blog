@@ -16,38 +16,35 @@ model User {
   password String
   role     Role   @default(VISITOR)
 
-  blog_posts BlogPost[]
-  edits      Edit[]
+  blog_posts   BlogPost[]
+  profile_page ProfilePage?
 
   @@index([username, role])
 }
 
 model BlogPost {
-  id                String     @id @unique @default(uuid())
-  title             String?
-  short_description String?
-  content           String?
-  thumbnail         String?
-  tags              String[]
-  status            PostStatus @default(DRAFT)
-  group             Role       @default(AUTHOR)
-  owner             User?      @relation(fields: [ownerid], references: [id])
-  ownerid           String?
-  edits             Edit[]
+  id          String     @id @unique @default(uuid())
+  title       String?
+  description String?
+  content     String?
+  thumbnail   String?
+  images      String[]
+  visibility  PostStatus @default(UNLISTED)
+  owner       User?      @relation(fields: [ownerid], references: [id])
+  ownerid     String?
 
   // Dates
   publish_date DateTime?
   created_date DateTime  @default(now())
 }
 
-model Edit {
-  id      String  @id @unique @default(uuid())
-  owner   User    @relation(fields: [ownerid], references: [id])
-  ownerid String
-  reason  String? @default("No reason provided.")
-
-  blogpost    BlogPost? @relation(fields: [blogpost_id], references: [id], onDelete: Cascade)
-  blogpost_id String?
+model ProfilePage {
+  id         String     @id @unique @default(uuid())
+  content    String?
+  images     String[]
+  visibility PostStatus @default(UNLISTED)
+  owner      User       @relation(fields: [ownerid], references: [id])
+  ownerid    String     @unique
 }
 
 enum Role {
@@ -58,13 +55,6 @@ enum Role {
 }
 
 enum PostStatus {
-  DRAFT
+  UNLISTED
   PUBLISHED
-}
-
-enum ProjectStatus {
-  DELAYED
-  IN_PROGRESS
-  SUCCESS
-  FAILURE
 }

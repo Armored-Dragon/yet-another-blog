@@ -2,6 +2,7 @@ body {
   margin: 0;
   background-color: #111;
   color: white;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 .header {
@@ -58,11 +59,18 @@ button:focus {
   background-color: #122d57;
 }
 
-button.good {
+button.good,
+a.good {
   background-color: #015b01;
 }
 
-button.bad {
+button.yellow,
+a.yellow {
+  background-color: #4a4a00;
+}
+
+button.bad,
+a.bad {
   background-color: #8e0000;
 }
 
@@ -75,9 +83,78 @@ button.bad {
   display: flex;
   flex-direction: row;
 }
-.page .horizontal-button-container button {
-  width: 100px;
+.page .horizontal-button-container button,
+.page .horizontal-button-container a {
+  width: 120px;
   min-height: 30px;
+  text-decoration: none;
+  display: flex;
+  margin-right: 5px;
+}
+.page .horizontal-button-container button span,
+.page .horizontal-button-container a span {
+  margin: auto;
+}
+.page .horizontal-button-container button:last-of-type,
+.page .horizontal-button-container a:last-of-type {
+  margin-right: 0;
+}
+.page .blog-admin {
+  margin-bottom: 10px;
+}
+.page .pagination {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  margin: 0 auto;
+}
+.page .pagination a {
+  height: 40px;
+  width: 150px;
+  margin-right: 5px;
+  display: flex;
+  text-decoration: none;
+  background-color: #222;
+}
+.page .pagination a span {
+  margin: auto;
+  color: white;
+  font-size: 20px;
+}
+.page .pagination a:last-of-type {
+  margin-right: 0;
+  margin-left: 5px;
+}
+.page .pagination a.disabled {
+  filter: brightness(50%);
+}
+.page .pagination .page-list {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 50px;
+}
+.page .pagination .page-list a {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  text-decoration: none;
+  background-color: #222;
+  border-radius: 10px;
+  margin: 0 10px 0 0;
+}
+.page .pagination .page-list a span {
+  margin: auto;
+  color: white;
+}
+.page .pagination .page-list a:first-of-type {
+  margin: auto 10px auto auto;
+}
+.page .pagination .page-list a:last-of-type {
+  margin: auto auto auto 0;
+}
+.page .pagination .page-list a.active {
+  background-color: #993d00;
 }
 
 .hidden {
@@ -86,6 +163,6 @@ button.bad {
 
 @media screen and (max-width: 1010px) {
   .page {
-    width: 100%;
+    width: 95%;
   }
 }

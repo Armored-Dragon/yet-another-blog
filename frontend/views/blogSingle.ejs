@@ -12,10 +12,13 @@
     <%- include("partials/header.ejs", {selected: 'home'}) %>
 
     <div class="page">
+      <!-- TODO: Check if user is the owner or an admin -->
+      <!-- TODO: Confirmation before deleting post -->
       <%if(logged_in_user) {%>
       <div class="blog-admin">
         <div class="horizontal-button-container">
-          <a class="yellow" href=""><span>Edit Profile</span></a>
+          <a id="delete-post" href="#" class="bad"><span>Delete Post</span></a>
+          <a class="yellow" href="/blog/<%=blog_post.id %>/edit"><span>Edit Post</span></a>
         </div>
       </div>
 

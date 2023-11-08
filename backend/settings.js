@@ -4,9 +4,14 @@ persistent_setting.init({ dir: "data/site/" });
 let settings = {
   SETUP_COMPLETE: false,
   ACCOUNT_REGISTRATION: false,
+  HIDE_LOGIN: false,
   BLOG_UPLOADING: false,
 
   USER_MINIMUM_PASSWORD_LENGTH: 6,
+
+  BLOG_MINIMUM_TITLE_LENGTH: 6,
+  BLOG_MINIMUM_DESCRIPTION_LENGTH: 6,
+  BLOG_MINIMUM_CONTENT_LENGTH: 6,
 };
 
 async function act(key, value) {

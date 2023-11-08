@@ -8,14 +8,14 @@
     <a class="nav-button" href="/blog">
       <div>Blog</div>
     </a>
-    <% if (user) { %>
-    <a class="nav-button" href="/author/<%= user.username %>">
+    <% if (logged_in_user) { %>
+    <a class="nav-button" href="/author/<%= logged_in_user.username %>">
       <div>Profile</div>
     </a>
-    <% } else {%>
+    <% } else {%> <% if(!settings.HIDE_LOGIN) {%>
     <a class="nav-button" href="/login">
       <div>Login</div>
     </a>
-    <% } %>
+    <% } %> <% } %>
   </div>
 </div>

@@ -13,12 +13,15 @@
     <%- include("partials/header.ejs", {selected: 'home'}) %>
 
     <div class="page">
-      <%- include("partials/blog-admin.ejs") %> <%- include("partials/blog-entry.ejs", {thumbnail: '/img/.dev/square.png', title: 'Title', description:
-      'Description', author: 'Author'}) %>
+      <%if(logged_in_user) {%> <%- include("partials/blog-admin.ejs") %> <%}%>
+      <!--  -->
+      <% for(post of blog_list) { %>
+      <!--  -->
+      <%- include("partials/blog-entry.ejs", {post:post}) %>
+      <!--  -->
+      <% } %> <%- include("partials/pagination.ejs") %>
     </div>
 
     <%- include("partials/footer.ejs") %>
   </body>
 </html>
-
-<script defer src="/js/login.js"></script>

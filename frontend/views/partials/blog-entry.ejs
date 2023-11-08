@@ -1,9 +1,16 @@
 <div class="blog-entry">
-  <a src="#" class="thumbnail">
-    <img src="<%= thumbnail %>" />
+  <a href="/blog/<%= post.id %>" class="thumbnail">
+    <img src="<%= post.thumbnail %>" />
   </a>
   <div class="blog-info">
-    <div class="blog-title"><a href="#"><%= title %></a> <a href="#" class="author">By: <%= author %></a></div>
-    <div class="blog-description"><%= description %></div>
+    <div class="blog-title">
+      <a href="/blog/<%= post.id %>"><%= post.title %> </a>
+      <a href="/author/<%= post.owner.id %>" class="author">By: <%= post.owner.username %></a>
+    </div>
+    <div class="blog-description"><%= post.description %></div>
+    <div class="blog-action">
+      <div class="date"><%= post.publish_date.toLocaleString('en-US', { dateStyle:'medium'}) %></div>
+      <a href="/blog/<%= post.id %>">Read this post -></a>
+    </div>
   </div>
 </div>

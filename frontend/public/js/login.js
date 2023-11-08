@@ -4,11 +4,7 @@ async function requestLogin() {
     password: qs("#password").value,
   };
 
-  const form = new FormData();
-  form.append("username", account_information.username);
-  form.append("password", account_information.password);
-
-  const account_response = await request("/login", "POST", form);
+  const account_response = await request("/login", "POST", account_information);
 
   // Check response for errors
 

@@ -5,6 +5,7 @@ body {
   margin: 0;
   background-color: #111;
   color: white;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 .header {
@@ -65,10 +66,16 @@ button:focus {
   background-color: #122d57;
 }
 
-button.good {
+button.good,
+a.good {
   background-color: #015b01;
 }
-button.bad {
+button.yellow,
+a.yellow {
+  background-color: #4a4a00;
+}
+button.bad,
+a.bad {
   background-color: #8e0000;
 }
 
@@ -81,9 +88,90 @@ button.bad {
     display: flex;
     flex-direction: row;
 
-    button {
-      width: 100px;
+    button,
+    a {
+      width: 120px;
       min-height: 30px;
+      text-decoration: none;
+      // background-color: #222;
+      display: flex;
+      margin-right: 5px;
+
+      span {
+        margin: auto;
+      }
+    }
+
+    button:last-of-type,
+    a:last-of-type {
+      margin-right: 0;
+    }
+  }
+
+  .blog-admin {
+    margin-bottom: 10px;
+  }
+
+  .pagination {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    margin: 0 auto;
+
+    a {
+      height: 40px;
+      width: 150px;
+      margin-right: 5px;
+      display: flex;
+      text-decoration: none;
+      background-color: #222;
+
+      span {
+        margin: auto;
+        color: white;
+        font-size: 20px;
+      }
+    }
+    a:last-of-type {
+      margin-right: 0;
+      margin-left: 5px;
+    }
+
+    a.disabled {
+      filter: brightness(50%);
+    }
+
+    .page-list {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: row;
+      margin-bottom: 50px;
+
+      a {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        text-decoration: none;
+        background-color: #222;
+        border-radius: 10px;
+        margin: 0 10px 0 0;
+
+        span {
+          margin: auto;
+          color: white;
+        }
+      }
+
+      a:first-of-type {
+        margin: auto 10px auto auto;
+      }
+      a:last-of-type {
+        margin: auto auto auto 0;
+      }
+
+      a.active {
+        background-color: #993d00;
+      }
     }
   }
 }
@@ -93,6 +181,6 @@ button.bad {
 }
 @media screen and (max-width: 1010px) {
   .page {
-    width: 100%;
+    width: 95%;
   }
 }
