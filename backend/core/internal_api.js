@@ -1,60 +1,79 @@
-const validate = require("./form_validation");
 const core = require("./core");
-const settings = require("../settings");
+const bcrypt = require("bcrypt");
+const validate = require("../form_validation");
 
-async function registerUser(username, password) {
-  // Get current and relevant settings
-  const active_settings = settings.getSettings();
-  const form_valid = await validate.userRegistration(username, password); // Check form for errors
+async function postRegister(req, res) {
+  const { username, password } = req.body; // Get the username and password from the request body
 
-  // Set variables for easy reading
-  const registration_allowed = active_settings.ACCOUNT_REGISTRATION;
-  const setup_complete = active_settings.SETUP_COMPLETE;
+  const form_validation = await validate.registerUser(username, password); // Check form for errors
 
-  if (!registration_allowed && setup_complete) return { success: false, message: "Registration is disabled" }; // Registration disabled
-  if (!form_valid.success) return form_valid; // Registration details did not validate
+  // User registration disabled?
+  // We also check if the server was setup. If it was not set up, the server will proceed anyways.
+  if (!core.settings["ACCOUNT_REGISTRATION"] && core.settings["SETUP_COMPLETE"])
+    return res.json({ success: false, message: "Account registrations are disabled" });
 
-  // Does a user using that username exist already?
-  const existing_user = await core.getUser({ username: username });
-  if (existing_user.success) return { success: false, message: "Username is taken" };
+  // User data valid?
+  if (!form_validation.success) return res.json({ success: false, message: form_validation.message });
 
-  // Register the user in the database
-  const role = setup_complete ? undefined : "ADMIN";
-  const registration_status = await core.registerUser(username, password, { role: role });
+  // If setup incomplete, set the user role to Admin. This is the initial user so it will be the master user.
+  const role = core.settings["SETUP_COMPLETE"] ? undefined : "ADMIN";
 
-  if (registration_status.success) return registration_status;
-  else return registration_status;
+  const hashed_password = await bcrypt.hash(password, 10); // Hash the password for security :^)
+  res.json(await core.registerUser(username, hashed_password, { role: role }));
 }
+async function postLogin(req, res) {
+  const { username, password } = req.body; // Get the username and password from the request body
 
-async function loginUser(username, password) {
   // Get the user by username
   const existing_user = await core.getUser({ username: username });
+  if (!existing_user.success) return res.json({ success: false, message: existing_user.message });
 
-  // Check for errors or problems
-  if (!existing_user.success) return { success: false, message: "User does not exist" };
-  if (existing_user.role === "LOCKED") return { success: false, message: "Account is locked: Contact your administrator" };
-  return { success: true, data: { username: existing_user.data.username, id: existing_user.data.id, password: existing_user.data.password } };
+  // Check the password
+  const password_match = await bcrypt.compare(password, existing_user.data.password);
+  if (!password_match) return res.json({ success: false, message: "Incorrect password" });
+
+  // Send the cookies to the user & return successful
+  req.session.user = { username: username, id: existing_user.data.id };
+  res.json({ success: true });
+}
+async function postSetting(request, response) {
+  const user = await core.getUser({ id: request.session.user.id });
+
+  // TODO: Permissions for changing settings
+  if (!user.success) return response.json({ success: false, message: user.message });
+  if (user.data.role !== "ADMIN") return response.json({ success: false, message: "User is not permitted" });
+
+  await core.postSetting(request.body.setting_name, request.body.value);
+
+  response.json({ success: true });
+}
+async function deleteImage(req, res) {
+  // TODO: Permissions for deleting image
+  return res.json(await core.deleteImage(req.body, req.session.user.id));
+}
+async function postBlog(req, res) {
+  // Get user
+  const user = await core.getUser({ id: req.session.user.id });
+  if (!user.success) return user;
+
+  // TODO: Permissions for uploading posts
+  // Can user upload?
+  // const permissions = await permissions.postBlog(user);
+
+  // TODO: Validation for uploading posts
+  // Validate blog info
+  const valid = await validate.postBlog(req.body);
+
+  // Upload blog post
+  return res.json(await core.postBlog(valid.data, req.session.user.id));
+}
+async function deleteBlog(req, res) {
+  // TODO: Permissions for deleting blog
+  return res.json(await core.deleteBlog(req.body.id, req.session.user.id));
+}
+async function patchBlog(req, res) {
+  // TODO: Permissions for updating blog
+  return res.json(await core.updateBlog(req.body, req.session.user.id));
 }
 
-async function getBlogList({ id, visibility, owner_id, raw } = {}, { page = 0, limit = 10 } = {}) {
-  const blog_list = await core.getBlogList({ id: id, visibility: visibility, owner_id: owner_id, raw: raw }, { page: page, limit: limit });
-  return blog_list;
-}
-
-async function getUser({ id } = {}) {
-  return await core.getUser({ id: id });
-}
-
-async function postBlog(blog_post, owner_id) {
-  return await core.postBlog(blog_post, owner_id);
-}
-async function deleteBlog(blog_id, owner_id) {
-  return await core.deleteBlog(blog_id, owner_id);
-}
-async function updateBlog(blog_post, requester_id) {
-  return await core.updateBlog(blog_post, requester_id);
-}
-async function deleteImage(image_data, requester_id) {
-  return await core.deleteImage(image_data, requester_id);
-}
-module.exports = { registerUser, loginUser, postBlog, getBlogList, deleteBlog, updateBlog, deleteImage, getUser };
+module.exports = { postRegister, postLogin, postSetting, deleteImage, postBlog, deleteBlog, patchBlog };

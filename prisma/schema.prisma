@@ -14,7 +14,9 @@ model User {
   id       String @id @unique @default(uuid())
   username String @unique
   password String
-  role     Role   @default(VISITOR)
+
+  role  Role    @default(USER)
+  group String?
 
   blog_posts   BlogPost[]
   profile_page ProfilePage?
@@ -30,8 +32,12 @@ model BlogPost {
   thumbnail   String?
   images      String[]
   visibility  PostStatus @default(UNLISTED)
-  owner       User?      @relation(fields: [ownerid], references: [id])
+  owner       User?      @relation(fields: [ownerid], references: [id], onDelete: Cascade)
   ownerid     String?
+
+  // Tags
+  organization_tag String?
+  keyword_tags     String[]
 
   // Dates
   publish_date DateTime?
@@ -43,14 +49,23 @@ model ProfilePage {
   content    String?
   images     String[]
   visibility PostStatus @default(UNLISTED)
-  owner      User       @relation(fields: [ownerid], references: [id])
+  owner      User       @relation(fields: [ownerid], references: [id], onDelete: Cascade)
   ownerid    String     @unique
+}
+
+model Setting {
+  id    String @unique
+  value Json
+}
+
+model Group {
+  id          String   @unique
+  permissions String[]
 }
 
 enum Role {
   LOCKED
-  VISITOR
-  AUTHOR
+  USER
   ADMIN
 }
 

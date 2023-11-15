@@ -82,7 +82,7 @@ async function publishBlog(unlisted, edit) {
     title: qs("#title").value,
     description: qs("#description").value,
     content: qs("#content").value,
-    unlisted: unlisted ? true : false,
+    visibility: unlisted ? "UNLISTED" : "PUBLISHED",
     date: qs("#date").value,
     time: qs("#time").value,
   };
@@ -114,7 +114,7 @@ async function publishBlog(unlisted, edit) {
   const res = await request("/api/web/blog", method, form_data);
 
   if (res.body.success) {
-    window.location.href = `/blog/${res.body.blog_id}`;
+    window.location.href = `/blog/${res.body.blog_id || blog_id}`;
   }
 }
 

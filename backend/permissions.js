@@ -1,3 +1,3 @@
-// TODO: Permissions file
+function postBlog(user) {}
 
-function checkPermissions(role, { minimum = true }) {}
+module.exports = { postBlog };

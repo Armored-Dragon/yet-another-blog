@@ -1,6 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const crypto = require("crypto");
 const sharp = require("sharp");
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsCommand, DeleteObjectsCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
@@ -12,61 +11,77 @@ const s3 = new S3Client({
   region: process.env.S3_REGION,
   endpoint: process.env.S3_ENDPOINT,
 });
-const settings = require("../settings");
 const md = require("markdown-it")();
 
+let settings = {
+  SETUP_COMPLETE: false,
+  ACCOUNT_REGISTRATION: false,
+  HIDE_LOGIN: false,
+  BLOG_UPLOADING: false,
+
+  USER_MINIMUM_PASSWORD_LENGTH: 7,
+
+  BLOG_MINIMUM_TITLE_LENGTH: 7,
+  BLOG_MINIMUM_DESCRIPTION_LENGTH: 7,
+  BLOG_MINIMUM_CONTENT_LENGTH: 7,
+};
+let groups = [];
+_getSettings();
+_getGroups();
+
 async function registerUser(username, password, options) {
-  const new_user = await prisma.user.create({ data: { username: username, password: password, ...options } });
+  let user_database_entry;
+  let user_profile_database_entry;
 
-  if (new_user.id) {
-    // If the user was created as an admin, make sure that the server knows the setup process is complete.
-    if (options.role === "ADMIN") settings.act("SETUP_COMPLETE", true);
+  // Create the entry in the database
+  try {
+    user_database_entry = await prisma.user.create({ data: { username: username, password: password, ...options } });
+  } catch (e) {
+    let message;
 
-    // Create a user profile page
-    const profile_page = await prisma.profilePage.create({ data: { owner: new_user.id } });
-    if (!profile_page.id) return { success: false, message: `Error creating profile page for user ${new_user.username}` };
+    if (e.code === "P2002") message = "Username already exists";
+    else message = "Unknown error";
 
-    // User has been successfully created
-    return { success: true, message: `Successfully created ${new_user.username}` };
+    return { success: false, message: message };
   }
 
-  return { success: false, message: "Unknown error" };
+  // Create a user profile page
+  try {
+    user_profile_database_entry = await prisma.profilePage.create({ data: { owner: { connect: { id: user_database_entry.id } } } });
+  } catch (e) {
+    return { success: false, message: `Error creating profile page for user ${username}` };
+  }
+
+  // Master user was created; server initialized
+  postSetting("SETUP_COMPLETE", true);
+
+  // User has been successfully created
+  return { success: true, message: `Successfully created ${username}` };
 }
-async function getUser({ id, username } = {}) {
-  if (id || username) {
-    let user;
-    if (id) user = await prisma.user.findUnique({ where: { id: id } });
-    else if (username) user = await prisma.user.findUnique({ where: { username: username } });
 
-    if (!user) return { success: false, message: "No matching user" };
-    else return { success: true, data: user };
-  }
+async function getUser({ id, username } = {}) {
+  let user;
+  if (id) user = await prisma.user.findUnique({ where: { id: id } });
+  else if (username) user = await prisma.user.findUnique({ where: { username: username } });
+
+  if (!user) return { success: false, message: "No matching user" };
+  else return { success: true, data: user };
 }
 async function postBlog(blog_post, owner_id) {
-  // Check if user has permissions to upload a blog post
   const user = await getUser({ id: owner_id });
-  if (!user.success) return { success: false, message: "User not found" };
+  // Check if user has permissions to upload a blog post
+
   if (user.data.role !== "ADMIN" && user.data.role !== "AUTHOR") return { success: false, message: "User is not permitted" };
 
-  const [year, month, day] = blog_post.date.split("-");
-  const [hour, minute] = blog_post.time.split(":");
-  let publish_date = new Date(year, month - 1, day, hour, minute);
+  // Save to database
+  const database_blog = await prisma.blogPost.create({ data: { ...blog_post, owner: { connect: { id: owner_id } } } });
 
-  let blog_post_formatted = {
-    title: blog_post.title,
-    description: blog_post.description,
-    content: blog_post.content,
-    visibility: blog_post.unlisted ? "UNLISTED" : "PUBLISHED",
-    publish_date: publish_date,
-  };
-
-  const database_blog = await prisma.blogPost.create({ data: { ...blog_post_formatted, owner: { connect: { id: owner_id } } } });
-
+  // Init image vars
   let uploaded_images = [];
   let uploaded_thumbnail = "DEFAULT";
 
+  // For Each image, upload to S3
   if (blog_post.images) {
-    // For Each image, upload to S3
     for (let i = 0; blog_post.images.length > i; i++) {
       const image = blog_post.images[i];
       const image_data = Buffer.from(image.data_blob.split(",")[1], "base64");
@@ -82,12 +97,13 @@ async function postBlog(blog_post, owner_id) {
     uploaded_thumbnail = name;
   }
 
+  // Update the blog post to include references to our images
   await prisma.blogPost.update({ where: { id: database_blog.id }, data: { images: uploaded_images, thumbnail: uploaded_thumbnail } });
   return { success: true, blog_id: database_blog.id };
 }
 async function deleteBlog(blog_id, requester_id) {
   const user = await getUser({ id: requester_id });
-  const post = await getBlogList({ id: blog_id });
+  const post = await getBlog({ id: blog_id });
 
   let can_delete = post.owner.id === user.data.id || user.data.role === "ADMIN";
 
@@ -101,7 +117,7 @@ async function deleteBlog(blog_id, requester_id) {
 }
 async function updateBlog(blog_post, requester_id) {
   const user = await getUser({ id: requester_id });
-  const post = await getBlogList({ id: blog_post.id, raw: true });
+  const post = await getBlog({ id: blog_post.id, raw: true });
 
   delete blog_post.id;
 
@@ -152,42 +168,24 @@ async function updateBlog(blog_post, requester_id) {
 
   return { success: true };
 }
-async function getBlogList({ id, visibility = "PUBLISHED", owner_id, raw = false } = {}, { limit = 10, page = 0 } = {}) {
+async function getBlog({ id, visibility = "PUBLISHED", owner_id, limit = 10, page = 0 } = {}) {
   if (id) {
     // Get the database entry for the blog post
     let post = await prisma.blogPost.findUnique({ where: { id: id }, include: { owner: true } });
+    if (!post) return { success: false, message: "Post does not exist" };
 
-    if (!post) return null;
-
-    if (raw) {
-      // Had to do this, only God knows why.
-      post.raw_images = [];
-      post.images.forEach((image) => post.raw_images.push(image));
-
-      post.raw_thumbnail = post.thumbnail;
-      post.raw_content = post.content;
-    }
-
-    // Get the image urls for the post
-    for (i = 0; post.images.length > i; i++) {
-      post.images[i] = await _getImage(post.id, "blog", post.images[i]);
-    }
-
-    // get thumbnail URL
-    post.thumbnail = await _getImage(post.id, "blog", post.thumbnail);
-
-    // Render the markdown contents of the post
-    post.content = md.render(post.content);
-
-    // Replace custom formatting with what we want
-    post.content = _format_blog_content(post.content, post.images);
+    // Render the post
+    const rendered_post = _renderPost(post, true);
 
     // Return the post with valid image urls
-    return post;
+    return rendered_post;
   }
+
+  let rendered_post_list = [];
 
   const where_object = {
     OR: [
+      // Standard discovery: Public, and after the publish date
       {
         AND: [
           {
@@ -201,6 +199,7 @@ async function getBlogList({ id, visibility = "PUBLISHED", owner_id, raw = false
         ],
       },
 
+      // User owns the post
       {
         ownerid: owner_id,
       },
@@ -214,30 +213,21 @@ async function getBlogList({ id, visibility = "PUBLISHED", owner_id, raw = false
     include: { owner: true },
     orderBy: [{ publish_date: "desc" }, { created_date: "desc" }],
   });
-  // Get the thumbnails
-  for (i = 0; blog_posts.length > i; i++) {
-    blog_posts[i].thumbnail = await _getImage(blog_posts[i].id, "blog", blog_posts[i].thumbnail);
 
-    // Get the image urls for the post
-    for (imgindx = 0; blog_posts[i].images.length > imgindx; imgindx++) {
-      blog_posts[i].images[imgindx] = await _getImage(blog_posts[i].id, "blog", blog_posts[i].images[imgindx]);
-    }
-
-    // Render the markdown contents of the post
-    blog_posts[i].content = md.render(blog_posts[i].content);
-
-    // Replace custom formatting with what we want
-    blog_posts[i].content = _format_blog_content(blog_posts[i].content, blog_posts[i].images);
+  // Render each of the posts in the list
+  for (blog_post of blog_posts) {
+    rendered_post_list.push(await _renderPost(blog_post, true));
   }
+
   // Calculate pagination
   let pagination = await prisma.blogPost.count({
     where: where_object,
   });
-  return { data: blog_posts, pagination: _getNavigationList(page, Math.ceil(pagination / limit)) };
+  return { data: rendered_post_list, pagination: _getNavigationList(page, Math.ceil(pagination / limit)) };
 }
 async function deleteImage(image, requester_id) {
   const user = await getUser({ id: requester_id });
-  const post = await getBlogList({ id: image.parent, raw: true });
+  const post = await getBlog({ id: image.parent, raw: true });
 
   // Check if post exists
   if (!post) return { success: false, message: "Post does not exist" };
@@ -319,6 +309,34 @@ async function _deleteS3Directory(id, type) {
   // If there are more objects to delete (truncated result), recursively call the function again
   // if (listed_objects.IsTruncated) await emptyS3Directory(bucket, dir);
 }
+async function _renderPost(blog_post, raw, { post_type = "blog" } = {}) {
+  if (raw) {
+    // Had to do this, only God knows why.
+    blog_post.raw_images = [];
+    if (blog_post.images) blog_post.images.forEach((image) => blog_post.raw_images.push(image));
+
+    blog_post.raw_thumbnail = blog_post.thumbnail;
+    blog_post.raw_content = blog_post.content;
+  }
+
+  if (blog_post.images) {
+    // Get the image urls for the post
+    for (i = 0; blog_post.images.length > i; i++) {
+      blog_post.images[i] = await _getImage(blog_post.id, post_type, blog_post.images[i]);
+    }
+  }
+
+  // get thumbnail URL
+  blog_post.thumbnail = await _getImage(blog_post.id, post_type, blog_post.thumbnail);
+
+  // Render the markdown contents of the post
+  blog_post.content = md.render(blog_post.content);
+
+  // Replace custom formatting with what we want
+  blog_post.content = _format_blog_content(blog_post.content, blog_post.images);
+
+  return blog_post;
+}
 function _format_blog_content(content, images) {
   // Replace Images
   const image_regex = /{image:([^}]+)}/g;
@@ -348,5 +366,36 @@ function _getNavigationList(current_page, max_page) {
   const pageList = [current_page - 2, current_page - 1, current_page, current_page + 1, current_page + 2].filter((num) => num >= 0 && num < max_page);
   return pageList.slice(0, 5);
 }
+async function _getSettings() {
+  // Go though each object key in our settings to get the value if it exists
+  Object.keys(settings).forEach(async (key) => {
+    let found_value = await prisma.setting.findUnique({ where: { id: key } });
+    if (!found_value) return;
 
-module.exports = { registerUser, getUser, postBlog, updateBlog, getBlogList, deleteBlog, deleteImage };
+    return (settings[key] = JSON.parse(found_value.value));
+  });
+}
+async function getSetting(key, { parse = true }) {
+  if (!settings[key]) return null;
+
+  if (parse) {
+    return JSON.parse(settings[key]);
+  }
+  return settings[key];
+}
+async function postSetting(key, value) {
+  try {
+    if (!Object.keys(settings).includes(key)) return { success: false, message: "Setting not valid" };
+
+    await prisma.setting.upsert({ where: { id: key }, update: { value: value }, create: { id: key, value: value } });
+    settings[key] = JSON.parse(value);
+
+    return { success: true };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+}
+async function _getGroups() {
+  const group_list = await prisma.group.findMany();
+}
+module.exports = { registerUser, getUser, postBlog, updateBlog, getBlogList: getBlog, deleteBlog, deleteImage, postSetting, getSetting, settings };
