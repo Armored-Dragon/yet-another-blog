@@ -230,7 +230,7 @@ async function deleteImage(image, requester_id) {
   const post = await getBlog({ id: image.parent, raw: true });
 
   // Check if post exists
-  if (!post) return { success: false, message: "Post does not exist" };
+  if (!post.success) return { success: false, message: "Post does not exist" };
 
   // Check for permissions
   if (post.owner.id !== user.data.id || user.data.role !== "ADMIN") return { success: false, message: "User is not permitted" };
@@ -257,7 +257,7 @@ async function _uploadImage(parent_id, parent_type, is_thumbnail, buffer, name) 
 
   const compressed_image = await sharp(buffer, { animated: true })
     .resize({ ...size, withoutEnlargement: true, fit: "inside" })
-    .webp({ quality: 90 })
+    .webp({ quality: 90, animated: true })
     .toBuffer();
 
   const params = {
