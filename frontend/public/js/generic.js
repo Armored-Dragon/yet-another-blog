@@ -2,6 +2,7 @@
 const qs = (selector) => document.querySelector(selector);
 const qsa = (selector) => document.querySelectorAll(selector);
 
+// TODO: Try/Catch for failed requests
 async function request(url, method, body) {
   const response = await fetch(url, {
     method: method,

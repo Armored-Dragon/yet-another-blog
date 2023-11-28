@@ -43,9 +43,7 @@ async function postSetting(request, response) {
   if (!user.success) return response.json({ success: false, message: user.message });
   if (user.data.role !== "ADMIN") return response.json({ success: false, message: "User is not permitted" });
 
-  await core.postSetting(request.body.setting_name, request.body.value);
-
-  response.json({ success: true });
+  response.json(await core.postSetting(request.body.setting_name, request.body.value));
 }
 async function deleteImage(req, res) {
   // TODO: Permissions for deleting image

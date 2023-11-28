@@ -13,35 +13,38 @@
 
     <div class="page">
       <div class="container">
-        <div class="settings-group">
-          <h1>Accounts</h1>
-          <div class="settings-row">
-            <div class="label">Account registration</div>
-            <div class="button-group">
-              <div class="spinner hidden">
-                <div>↺</div>
-              </div>
-              <% if (!settings.ACCOUNT_REGISTRATION ) { %>
-              <button id="registration_toggle" onclick="toggleState('ACCOUNT_REGISTRATION', true, this.id)" class="bad"><div>Disabled</div></button>
-              <% } else { %>
-              <button id="registration_toggle" onclick="toggleState('ACCOUNT_REGISTRATION', false, this.id)" class="good"><div>Enabled</div></button>
-              <%}%>
-            </div>
-          </div>
+        <div class="category-navigation">
+          <button id="accounts-nav-btn" class="active" onclick="toggleActiveCategory('accounts')"><span>Accounts</span></button>
+          <button id="content-delivery-nav-btn" onclick="toggleActiveCategory('content-delivery')"><span>Content Delivery</span></button>
+          <button id="groups-nav-btn" onclick="toggleActiveCategory('groups')"><span>Groups</span></button>
+          <button id="yab-master-nav-btn" onclick="toggleActiveCategory('yab-master')"><span>YAB</span></button>
+        </div>
+        <div id="accounts" class="category-page">
+          <!-- Account registration -->
+          <%- include("partials/admin-setting-toggle.ejs", {setting: {name: 'ACCOUNT_REGISTRATION', name_pretty: 'Account registration', enabled:
+          settings.ACCOUNT_REGISTRATION}}) %>
+          <!-- Hide login -->
+          <%- include("partials/admin-setting-toggle.ejs", {setting: {name: 'HIDE_LOGIN', name_pretty: 'Hide Login', enabled: settings.HIDE_LOGIN}}) %>
+          <!-- Minimum password length -->
+          <%- include("partials/admin-setting-number.ejs", {setting: {name:'USER_MINIMUM_PASSWORD_LENGTH', name_pretty: 'Minimum Password Length', value:
+          settings.USER_MINIMUM_PASSWORD_LENGTH}}) %>
+        </div>
 
-          <div class="settings-row">
-            <div class="label">Hide Login</div>
-            <div class="button-group">
-              <div class="spinner hidden">
-                <div>↺</div>
-              </div>
-              <% if (!settings.HIDE_LOGIN ) { %>
-              <button id="hidelogin_toggle" onclick="toggleState('HIDE_LOGIN', true, this.id)" class="bad"><div>Disabled</div></button>
-              <% } else { %>
-              <button id="hidelogin_toggle" onclick="toggleState('HIDE_LOGIN', false, this.id)" class="good"><div>Enabled</div></button>
-              <%}%>
-            </div>
-          </div>
+        <div id="content-delivery" class="category-page hidden">
+          <!-- RSS -->
+          <%- include("partials/admin-setting-toggle.ejs", {setting: {name: 'CD_RSS', name_pretty: 'RSS Feed', enabled: settings.CD_RSS}}) %>
+          <!-- ActivityPub -->
+          <%- include("partials/admin-setting-toggle.ejs", {setting: {name: 'CD_AP', name_pretty: 'Activity Pub Feed', enabled: settings.CD_AP}}) %>
+          <!-- TODO: Add these option automatically to footer on active -->
+        </div>
+
+        <div id="groups" class="category-page hidden">TODO</div>
+        <div id="yab-master" class="category-page hidden">
+          <!-- Website title -->
+          <%- include("partials/admin-setting-text.ejs", {setting: {name: 'WEBSITE_NAME', name_pretty: 'Website Title', value: settings.WEBSITE_NAME}}) %>
+          <!-- Placeholder thumbnail -->
+          <!-- Plausible analytics -->
+          <%- include("partials/admin-setting-text.ejs", {setting: {name: 'PLAUSIBLE_URL', name_pretty: 'Plausible URL', value: settings.PLAUSIBLE_URL}}) %>
         </div>
       </div>
     </div>

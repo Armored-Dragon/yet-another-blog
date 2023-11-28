@@ -2,7 +2,8 @@ const external = require("./core/external_api");
 const core = require("./core/core");
 
 function getDefaults(req) {
-  return { logged_in_user: req.session.user, website_name: process.env.WEBSITE_NAME, settings: core.settings };
+  // TODO: Fix reference to website_name
+  return { logged_in_user: req.session.user, website_name: core.settings.WEBSITE_NAME || "Yet-Another-Blog", settings: core.settings };
 }
 
 async function index(request, response) {

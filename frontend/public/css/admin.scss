@@ -6,35 +6,89 @@
   padding: 10px 20px;
   box-sizing: border-box;
 
-  .settings-group {
-    .settings-row {
+  .category-navigation {
+    width: 100%;
+    height: 30px;
+    display: flex;
+    margin-bottom: 15px;
+
+    button {
+      width: 100%;
+      margin-right: 5px;
+      border-radius: 5px;
+      text-decoration: none;
       display: flex;
-      flex-direction: row;
-      padding: 4px;
-      box-sizing: border-box;
-      .label {
-        margin: auto auto auto 0;
+
+      span {
+        margin: auto;
+        color: white;
+      }
+    }
+
+    button:not(.active) {
+      background-color: #4c515e;
+    }
+
+    button:hover,
+    button:focus {
+      filter: brightness(50%);
+    }
+
+    button:active {
+      // display: none;
+    }
+  }
+
+  .setting-row {
+    display: flex;
+    flex-direction: row;
+    min-height: 30px;
+    padding: 5px;
+    box-sizing: border-box;
+
+    .setting-title {
+      font-size: 18px;
+      margin: auto auto auto 0;
+    }
+
+    .setting-toggleable {
+      min-width: 150px;
+      display: flex;
+      margin: auto 0 auto auto;
+
+      .spinner {
+        margin: auto 0 auto auto;
+        animation: spin 1s;
+        animation-timing-function: linear;
+        animation-iteration-count: infinite;
       }
 
-      .button-group {
-        display: flex;
-        flex-direction: row;
+      input {
+        padding: 0;
         margin: auto 0 auto auto;
-        .spinner {
-          margin: auto 10px auto auto;
-          animation: spin 1s;
-          animation-timing-function: linear;
-          animation-iteration-count: infinite;
-        }
-        button {
-          height: 30px;
-          padding: 0px 20px;
-        }
+        // width: 100%;
+        width: 100px;
+        box-sizing: border-box;
+        text-align: center;
+        border-radius: 10px;
+      }
+
+      input[type="text"] {
+        width: 350px;
+      }
+
+      button {
+        width: 125px;
+        margin-left: auto;
+        height: 30px;
       }
     }
-    .settings-row:nth-child(even) {
-      background-color: #00000033;
-    }
+  }
+  .setting-row:nth-child(even) {
+    background-color: #1c1c1c;
+  }
+  .setting-row:nth-child(odd) {
+    background-color: #191919;
   }
 }
 @keyframes spin {

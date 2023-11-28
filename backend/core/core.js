@@ -19,6 +19,12 @@ let settings = {
   HIDE_LOGIN: false,
   BLOG_UPLOADING: false,
 
+  CD_RSS: false,
+  CD_AP: false,
+
+  WEBSITE_NAME: "",
+  PLAUSIBLE_URL: "",
+
   USER_MINIMUM_PASSWORD_LENGTH: 7,
 
   BLOG_MINIMUM_TITLE_LENGTH: 7,
@@ -372,9 +378,18 @@ async function _getSettings() {
     let found_value = await prisma.setting.findUnique({ where: { id: key } });
     if (!found_value) return;
 
-    return (settings[key] = JSON.parse(found_value.value));
+    let value;
+    // Parse JSON if possible
+    try {
+      value = JSON.parse(found_value.value);
+    } catch {
+      value = found_value.value;
+    }
+
+    return (settings[key] = value);
   });
 }
+
 async function getSetting(key, { parse = true }) {
   if (!settings[key]) return null;
 

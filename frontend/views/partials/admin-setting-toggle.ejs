@@ -1,0 +1,13 @@
+<div class="setting-row">
+  <div class="setting-title"><%=setting.name_pretty%></div>
+  <div class="setting-toggleable">
+    <div class="spinner hidden">
+      <div>↺</div>
+    </div>
+    <% if (!setting.enabled) { %>
+    <button id="<%=setting.name%>_toggle" onclick="toggleState('<%=setting.name%>', true, this.id)" class="bad"><div>Disabled</div></button>
+    <% } else { %>
+    <button id="<%=setting.name%>_toggle" onclick="toggleState('<%=setting.name%>', false, this.id)" class="good"><div>Enabled</div></button>
+    <%}%>
+  </div>
+</div>

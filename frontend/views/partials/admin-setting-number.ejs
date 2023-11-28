@@ -1,0 +1,15 @@
+<div class="setting-row">
+  <div class="setting-title"><%=setting.name_pretty%></div>
+  <div class="setting-toggleable">
+    <div class="spinner hidden">
+      <div>↺</div>
+    </div>
+    <input
+      type="number"
+      id="<%=setting.name%>"
+      onkeydown="updateValue(event.keyCode, '<%=setting.name%>', this.value, this.id)"
+      placeholder="<%=setting.name_pretty%>"
+      value="<%=setting.value%>"
+    />
+  </div>
+</div>

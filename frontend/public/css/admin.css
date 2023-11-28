@@ -2,6 +2,7 @@ body {
   margin: 0;
   background-color: #111;
   color: white;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 .header {
@@ -58,11 +59,18 @@ button:focus {
   background-color: #122d57;
 }
 
-button.good {
+button.good,
+a.good {
   background-color: #015b01;
 }
 
-button.bad {
+button.yellow,
+a.yellow {
+  background-color: #4a4a00;
+}
+
+button.bad,
+a.bad {
   background-color: #8e0000;
 }
 
@@ -75,9 +83,78 @@ button.bad {
   display: flex;
   flex-direction: row;
 }
-.page .horizontal-button-container button {
-  width: 100px;
+.page .horizontal-button-container button,
+.page .horizontal-button-container a {
+  width: 120px;
   min-height: 30px;
+  text-decoration: none;
+  display: flex;
+  margin-right: 5px;
+}
+.page .horizontal-button-container button span,
+.page .horizontal-button-container a span {
+  margin: auto;
+}
+.page .horizontal-button-container button:last-of-type,
+.page .horizontal-button-container a:last-of-type {
+  margin-right: 0;
+}
+.page .blog-admin {
+  margin-bottom: 10px;
+}
+.page .pagination {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  margin: 0 auto;
+}
+.page .pagination a {
+  height: 40px;
+  width: 150px;
+  margin-right: 5px;
+  display: flex;
+  text-decoration: none;
+  background-color: #222;
+}
+.page .pagination a span {
+  margin: auto;
+  color: white;
+  font-size: 20px;
+}
+.page .pagination a:last-of-type {
+  margin-right: 0;
+  margin-left: 5px;
+}
+.page .pagination a.disabled {
+  filter: brightness(50%);
+}
+.page .pagination .page-list {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 50px;
+}
+.page .pagination .page-list a {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  text-decoration: none;
+  background-color: #222;
+  border-radius: 10px;
+  margin: 0 10px 0 0;
+}
+.page .pagination .page-list a span {
+  margin: auto;
+  color: white;
+}
+.page .pagination .page-list a:first-of-type {
+  margin: auto 10px auto auto;
+}
+.page .pagination .page-list a:last-of-type {
+  margin: auto auto auto 0;
+}
+.page .pagination .page-list a.active {
+  background-color: #993d00;
 }
 
 .hidden {
@@ -86,7 +163,7 @@ button.bad {
 
 @media screen and (max-width: 1010px) {
   .page {
-    width: 100%;
+    width: 95%;
   }
 }
 .container {
@@ -95,32 +172,73 @@ button.bad {
   padding: 10px 20px;
   box-sizing: border-box;
 }
-.container .settings-group .settings-row {
+.container .category-navigation {
+  width: 100%;
+  height: 30px;
+  display: flex;
+  margin-bottom: 15px;
+}
+.container .category-navigation button {
+  width: 100%;
+  margin-right: 5px;
+  border-radius: 5px;
+  text-decoration: none;
+  display: flex;
+}
+.container .category-navigation button span {
+  margin: auto;
+  color: white;
+}
+.container .category-navigation button:not(.active) {
+  background-color: #4c515e;
+}
+.container .category-navigation button:hover,
+.container .category-navigation button:focus {
+  filter: brightness(50%);
+}
+.container .setting-row {
   display: flex;
   flex-direction: row;
-  padding: 4px;
+  min-height: 30px;
+  padding: 5px;
   box-sizing: border-box;
 }
-.container .settings-group .settings-row .label {
+.container .setting-row .setting-title {
+  font-size: 18px;
   margin: auto auto auto 0;
 }
-.container .settings-group .settings-row .button-group {
+.container .setting-row .setting-toggleable {
+  min-width: 150px;
   display: flex;
-  flex-direction: row;
   margin: auto 0 auto auto;
 }
-.container .settings-group .settings-row .button-group .spinner {
-  margin: auto 10px auto auto;
+.container .setting-row .setting-toggleable .spinner {
+  margin: auto 0 auto auto;
   animation: spin 1s;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
-.container .settings-group .settings-row .button-group button {
-  height: 30px;
-  padding: 0px 20px;
+.container .setting-row .setting-toggleable input {
+  padding: 0;
+  margin: auto 0 auto auto;
+  width: 100px;
+  box-sizing: border-box;
+  text-align: center;
+  border-radius: 10px;
 }
-.container .settings-group .settings-row:nth-child(even) {
-  background-color: rgba(0, 0, 0, 0.2);
+.container .setting-row .setting-toggleable input[type=text] {
+  width: 350px;
+}
+.container .setting-row .setting-toggleable button {
+  width: 125px;
+  margin-left: auto;
+  height: 30px;
+}
+.container .setting-row:nth-child(even) {
+  background-color: #1c1c1c;
+}
+.container .setting-row:nth-child(odd) {
+  background-color: #191919;
 }
 
 @keyframes spin {
