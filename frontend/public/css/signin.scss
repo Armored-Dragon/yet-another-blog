@@ -37,13 +37,21 @@
 
   .horizontal-button-container {
     flex-direction: row-reverse !important;
-    a {
-      color: white;
-      margin: auto auto auto 0;
+
+    * {
+      width: 100% !important;
     }
 
+    a,
     button {
-      width: 200px !important;
+      color: white;
+      display: flex;
+      width: min-content;
+
+      span {
+        margin: auto;
+        text-align: center;
+      }
     }
   }
 }

@@ -38,6 +38,33 @@
       </div>
 
       <div class="e-content">
+        <div class="text-actions">
+          <div class="left">
+            <a id="insert-h1"><span>H1</span></a>
+            <a id="insert-h2"><span>H2</span></a>
+            <a id="insert-h3"><span>H3</span></a>
+            <a id="insert-h4"><span>H4</span></a>
+            <a id="insert-underline">
+              <span><u>U</u></span>
+            </a>
+            <a id="insert-italics">
+              <span><i>i</i></span>
+            </a>
+            <a id="insert-bold">
+              <span><strong>B</strong></span>
+            </a>
+            <a id="insert-strike">
+              <span><del>S</del></span>
+            </a>
+            <a id="insert-sup">
+              <span><sup>Sup</sup></span>
+            </a>
+          </div>
+          <div class="right">
+            <a id="insert-sidebyside"><img src="/img/textarea/sidebyside.svg" /></a>
+            <a id="insert-video"><img src="/img/textarea/video.svg" /></a>
+          </div>
+        </div>
         <textarea id="content" placeholder="Tell us about your subject..."><%= existing_blog.raw_content %></textarea>
       </div>
 
@@ -51,9 +78,9 @@
           <% } %>
           <!--  -->
           <% if(existing_blog.publish_date) {%>
-          <input id="time" type="time" step="3600" value="<%= existing_blog.publish_time %>" />
+          <input id="time" type="time" value="<%= existing_blog.publish_time %>" />
           <%} else { %>
-          <input id="time" type="time" value="13:00" step="3600" />
+          <input id="time" type="time" value="13:00" />
           <% } %>
         </div>
       </div>

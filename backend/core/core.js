@@ -11,7 +11,16 @@ const s3 = new S3Client({
   region: process.env.S3_REGION,
   endpoint: process.env.S3_ENDPOINT,
 });
-const md = require("markdown-it")();
+const md = require("markdown-it")()
+  .use(require("markdown-it-underline"))
+  .use(require("markdown-it-footnote"))
+  .use(require("markdown-it-sup"))
+  .use(require("markdown-it-anchor"), {
+    permalink: require("markdown-it-anchor").permalink.linkInsideHeader({
+      placement: "before",
+      symbol: `⮺`,
+    }),
+  });
 
 let settings = {
   SETUP_COMPLETE: false,
@@ -79,8 +88,17 @@ async function postBlog(blog_post, owner_id) {
 
   if (user.data.role !== "ADMIN" && user.data.role !== "AUTHOR") return { success: false, message: "User is not permitted" };
 
+  // Create object without image data to store in the database
+  let blog_post_formatted = {
+    title: blog_post.title,
+    description: blog_post.description,
+    content: blog_post.content,
+    visibility: blog_post.visibility,
+    publish_date: blog_post.publish_date,
+  };
+
   // Save to database
-  const database_blog = await prisma.blogPost.create({ data: { ...blog_post, owner: { connect: { id: owner_id } } } });
+  const database_blog = await prisma.blogPost.create({ data: { ...blog_post_formatted, owner: { connect: { id: owner_id } } } });
 
   // Init image vars
   let uploaded_images = [];
@@ -236,7 +254,7 @@ async function deleteImage(image, requester_id) {
   const post = await getBlog({ id: image.parent, raw: true });
 
   // Check if post exists
-  if (!post.success) return { success: false, message: "Post does not exist" };
+  if (!post) return { success: false, message: "Post does not exist" };
 
   // Check for permissions
   if (post.owner.id !== user.data.id || user.data.role !== "ADMIN") return { success: false, message: "User is not permitted" };
@@ -350,12 +368,24 @@ function _format_blog_content(content, images) {
   // Replace Side-by-side
   const side_by_side = /{sidebyside}(.*?){\/sidebyside}/gs;
 
+  // Replace video links
+  const video = /{video:([^}]+)}/g;
+
+  content = content.replace(video, (match, inner_content) => {
+    return `<div class='video-embed'><iframe src="${_getVideoEmbed(
+      inner_content
+    )}" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+  });
+
   content = content.replace(image_regex, (match, image_name) => {
     for (image of images) {
       if (image.includes(image_name)) {
         return `<div class='image-container'><img src='${image}'></div>`;
       }
     }
+
+    // Unknown image (Image was probably deleted)
+    return "";
   });
 
   content = content.replace(side_by_side, (match, inner_content) => {
@@ -364,6 +394,24 @@ function _format_blog_content(content, images) {
 
   // Finished formatting, return!
   return content;
+
+  function _getVideoEmbed(video_url) {
+    // YouTube
+    if (video_url.includes("youtu.be")) {
+      return `https://youtube.com/embed/${video_url.split("/")[3]}`;
+    }
+    if (video_url.includes("youtube")) {
+      let video_id = video_url.split("/")[3];
+      video_id = video_id.split("watch?v=").pop();
+      return `https://youtube.com/embed/${video_id}`;
+    }
+
+    // Odysee
+    if (video_url.includes("://odysee.com")) {
+      let video_link = `https://${video_url.split("/")[2]}/$/embed/${video_url.split("/")[3]}/${video_url.split("/")[4]}`;
+      return video_link;
+    }
+  }
 }
 function _getNavigationList(current_page, max_page) {
   current_page = Number(current_page);

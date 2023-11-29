@@ -35,7 +35,7 @@ async function blogList(req, res) {
 }
 async function blogSingle(req, res) {
   const blog = await core.getBlogList({ id: req.params.blog_id });
-  if (blog === null) return res.redirect("/blog");
+  if (blog.success === false) return res.redirect("/blog");
   res.render("blogSingle.ejs", { ...getDefaults(req), blog_post: blog });
 }
 function blogNew(request, response) {

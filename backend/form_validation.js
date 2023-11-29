@@ -32,6 +32,8 @@ async function postBlog(blog_object) {
     content: blog_object.content,
     visibility: blog_object.visibility,
     publish_date: publish_date,
+    images: blog_object.images,
+    thumbnail: blog_object.thumbnail,
   };
 
   return { success: true, data: blog_post_formatted };

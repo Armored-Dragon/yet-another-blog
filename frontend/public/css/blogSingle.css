@@ -11,6 +11,16 @@
 .page .image-container img {
   width: 100%;
 }
+.page .video-embed {
+  width: 100%;
+  min-height: 560px;
+  display: flex;
+}
+.page .video-embed iframe {
+  width: 100%;
+  height: 560px;
+  margin: auto;
+}
 .page .side-by-side {
   display: flex;
   flex-flow: row wrap;
@@ -21,6 +31,16 @@
   box-sizing: border-box;
   width: 50%;
   margin-bottom: 0;
+}
+.page .side-by-side .video-embed {
+  width: 50%;
+  min-height: 280px;
+  padding: 5px;
+  box-sizing: border-box;
+}
+.page .side-by-side .video-embed iframe {
+  width: 100%;
+  height: 280px;
 }
 .page h1 {
   border-bottom: 1px solid #777;

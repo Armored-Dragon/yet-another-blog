@@ -26,9 +26,14 @@ function stylizeDropArea(element) {
   });
 }
 
+// Auto resize on page load
+text_area.style.height = text_area.scrollHeight + "px";
+text_area.style.minHeight = text_area.scrollHeight + "px";
+
 // Auto expand blog area
-qs(".e-content textarea").addEventListener("input", (e) => {
-  e.target.style.height = e.target.scrollHeight + "px";
+text_area.addEventListener("input", (e) => {
+  text_area.style.height = text_area.scrollHeight + "px";
+  text_area.style.minHeight = e.target.scrollHeight + "px";
 });
 
 stylizeDropArea(thumbnail_area);
@@ -163,7 +168,7 @@ function updateImages() {
   qsa(".e-image-area .image").forEach((entry) => entry.remove());
 
   // Clear placeholder text
-  if (qs(".e-image-area .placeholder")) qs(".e-image-area .placeholder").remove();
+  if (existing_images.length + pending_images.length > 0) if (qs(".e-image-area .placeholder")) qs(".e-image-area .placeholder").remove();
 
   existing_images.forEach((image) => {
     image_area.insertAdjacentHTML("beforeend", image_div(image.id, image.url));
@@ -175,6 +180,44 @@ function updateImages() {
   });
 
   customDragString();
+}
+
+// Text area custom text editor
+qs("#insert-sidebyside").addEventListener("click", () => textareaAction("{sidebyside}{/sidebyside}", 12));
+qs("#insert-video").addEventListener("click", () => textareaAction("{video:}", 7));
+qs("#insert-h1").addEventListener("click", () => textareaAction("# "));
+qs("#insert-h2").addEventListener("click", () => textareaAction("## "));
+qs("#insert-h3").addEventListener("click", () => textareaAction("### "));
+qs("#insert-h4").addEventListener("click", () => textareaAction("#### "));
+qs("#insert-underline").addEventListener("click", () => textareaAction("_", undefined, true));
+qs("#insert-italics").addEventListener("click", () => textareaAction("*", undefined, true));
+qs("#insert-bold").addEventListener("click", () => textareaAction("__", undefined, true));
+qs("#insert-strike").addEventListener("click", () => textareaAction("~~", undefined, true));
+qs("#insert-sup").addEventListener("click", () => textareaAction("^", undefined, true));
+
+function textareaAction(insert, cursor_position, dual_side) {
+  // Insert the custom string at the cursor position
+  const selectionStart = text_area.selectionStart;
+  const selectionEnd = text_area.selectionEnd;
+
+  const textBefore = text_area.value.substring(0, selectionStart);
+  const textAfter = text_area.value.substring(selectionEnd);
+  const selectedText = text_area.value.substring(selectionStart, selectionEnd);
+
+  let updatedText;
+
+  if (dual_side) {
+    updatedText = `${textBefore}${insert}${selectedText}${insert}${textAfter}`;
+  } else {
+    updatedText = `${textBefore}${insert}${selectedText}${textAfter}`;
+  }
+
+  text_area.value = updatedText;
+
+  // Set the cursor position after the custom string
+  qs(".e-content textarea").focus();
+  const newPosition = selectionStart + (cursor_position || insert.length);
+  text_area.setSelectionRange(newPosition, newPosition);
 }
 
 text_area.addEventListener("drop", (event) => {
