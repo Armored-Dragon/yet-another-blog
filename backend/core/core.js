@@ -73,7 +73,83 @@ async function registerUser(username, password, options) {
   // User has been successfully created
   return { success: true, message: `Successfully created ${username}` };
 }
+// Posts
+async function getBlog({ id, visibility = "PUBLISHED", owner_id, limit = 10, page = 0, tags = [], search_title = false, search_content = false, search }) {
+  // If we have an ID, we want a single post
+  if (id) {
+    // Get the post by the id
+    let post = await prisma.blogPost.findUnique({ where: { id: id }, include: { owner: true } });
+    if (!post) return { success: false, message: "Post does not exist" };
 
+    // Render the post
+    const rendered_post = await _renderPost(post, true);
+
+    // Return the post with valid image urls
+    return { data: rendered_post, success: true };
+  }
+  // Otherwise build WHERE_OBJECT using data we do have
+  let rendered_post_list = [];
+  let where_object = {
+    OR: [
+      // Standard discovery: Public, and after the publish date
+      {
+        AND: [
+          {
+            visibility: "PUBLISHED",
+          },
+          {
+            publish_date: {
+              lte: new Date(),
+            },
+          },
+        ],
+      },
+
+      // User owns the post
+      {
+        ownerid: owner_id,
+      },
+    ],
+    AND: [],
+  };
+
+  // Build the "where_object" object
+  if (tags.length > 0) {
+  }
+  if (search_title) where_object["AND"].push({ title: { contains: search, mode: "insensitive" } });
+  if (search_content) where_object["AND"].push({ content: { contains: search, mode: "insensitive" } });
+
+  // Execute search
+  const blog_posts = await prisma.blogPost.findMany({
+    where: where_object,
+    take: limit,
+    skip: Math.max(page, 0) * limit,
+    include: { owner: true },
+    orderBy: [{ publish_date: "desc" }, { created_date: "desc" }],
+  });
+
+  // Render each of the posts in the list
+  for (post of blog_posts) {
+    rendered_post_list.push(await _renderPost(post, true));
+  }
+  // Calculate pagination
+  let pagination = await prisma.blogPost.count({
+    where: where_object,
+  });
+  return { data: rendered_post_list, pagination: _getNavigationList(page, Math.ceil(pagination / limit)), success: true };
+}
+async function getAuthorPage({ author_id }) {
+  // Get the post by the id
+
+  let post = await prisma.profilePage.findUnique({ where: { ownerid: author_id }, include: { owner: true } });
+  if (!post) return { success: false, message: "Post does not exist" };
+
+  // Render the post
+  const rendered_post = await _renderPost(post, true);
+
+  // Return the post with valid image urls
+  return { data: rendered_post, success: true };
+}
 async function getUser({ id, username } = {}) {
   let user;
   if (id) user = await prisma.user.findUnique({ where: { id: id } });
@@ -127,7 +203,7 @@ async function postBlog(blog_post, owner_id) {
 }
 async function deleteBlog(blog_id, requester_id) {
   const user = await getUser({ id: requester_id });
-  const post = await getBlog({ id: blog_id });
+  const post = await getPost({ id: blog_id });
 
   let can_delete = post.owner.id === user.data.id || user.data.role === "ADMIN";
 
@@ -141,7 +217,7 @@ async function deleteBlog(blog_id, requester_id) {
 }
 async function updateBlog(blog_post, requester_id) {
   const user = await getUser({ id: requester_id });
-  const post = await getBlog({ id: blog_post.id, raw: true });
+  const post = await getPost({ id: blog_post.id, raw: true });
 
   delete blog_post.id;
 
@@ -192,66 +268,9 @@ async function updateBlog(blog_post, requester_id) {
 
   return { success: true };
 }
-async function getBlog({ id, visibility = "PUBLISHED", owner_id, limit = 10, page = 0 } = {}) {
-  if (id) {
-    // Get the database entry for the blog post
-    let post = await prisma.blogPost.findUnique({ where: { id: id }, include: { owner: true } });
-    if (!post) return { success: false, message: "Post does not exist" };
-
-    // Render the post
-    const rendered_post = _renderPost(post, true);
-
-    // Return the post with valid image urls
-    return rendered_post;
-  }
-
-  let rendered_post_list = [];
-
-  const where_object = {
-    OR: [
-      // Standard discovery: Public, and after the publish date
-      {
-        AND: [
-          {
-            visibility: "PUBLISHED",
-          },
-          {
-            publish_date: {
-              lte: new Date(),
-            },
-          },
-        ],
-      },
-
-      // User owns the post
-      {
-        ownerid: owner_id,
-      },
-    ],
-  };
-
-  const blog_posts = await prisma.blogPost.findMany({
-    where: where_object,
-    take: limit,
-    skip: Math.max(page, 0) * limit,
-    include: { owner: true },
-    orderBy: [{ publish_date: "desc" }, { created_date: "desc" }],
-  });
-
-  // Render each of the posts in the list
-  for (blog_post of blog_posts) {
-    rendered_post_list.push(await _renderPost(blog_post, true));
-  }
-
-  // Calculate pagination
-  let pagination = await prisma.blogPost.count({
-    where: where_object,
-  });
-  return { data: rendered_post_list, pagination: _getNavigationList(page, Math.ceil(pagination / limit)) };
-}
 async function deleteImage(image, requester_id) {
   const user = await getUser({ id: requester_id });
-  const post = await getBlog({ id: image.parent, raw: true });
+  const post = await getPost({ id: image.parent, raw: true });
 
   // Check if post exists
   if (!post) return { success: false, message: "Post does not exist" };
@@ -461,4 +480,4 @@ async function postSetting(key, value) {
 async function _getGroups() {
   const group_list = await prisma.group.findMany();
 }
-module.exports = { registerUser, getUser, postBlog, updateBlog, getBlogList: getBlog, deleteBlog, deleteImage, postSetting, getSetting, settings };
+module.exports = { settings, registerUser, getUser, getAuthorPage, postBlog, updateBlog, getBlog, deleteBlog, deleteImage, postSetting, getSetting };

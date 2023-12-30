@@ -14,6 +14,10 @@
 
     <div class="page">
       <%if(logged_in_user) {%> <%- include("partials/blog-admin.ejs") %> <%}%>
+      <!-- Search area -->
+      <div class="search-area">
+        <input type="text" placeholder="Search..." /><button id="search-btn"><span>Search</span></button>
+      </div>
       <!--  -->
       <% for(post of blog_list) { %>
       <!--  -->
@@ -25,3 +29,5 @@
     <%- include("partials/footer.ejs") %>
   </body>
 </html>
+
+<script defer src="/js/postList.js"></script>

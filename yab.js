@@ -39,7 +39,7 @@ app.patch("/api/web/blog", checkAuthenticated, internal.patchBlog);
 app.get("/", page_scripts.index);
 app.get("/login", page_scripts.login);
 app.get("/register", checkNotAuthenticated, page_scripts.register);
-app.get("/author/:author_username", page_scripts.author);
+app.get("/author/:author_id", page_scripts.author);
 app.get("/admin", checkAuthenticated, page_scripts.admin);
 app.get("/blog", page_scripts.blogList);
 app.get("/blog/new", checkAuthenticated, page_scripts.blogNew);

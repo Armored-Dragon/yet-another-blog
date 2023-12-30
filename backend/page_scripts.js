@@ -8,7 +8,6 @@ function getDefaults(req) {
 
 async function index(request, response) {
   // Check if the master admin has been created
-
   const is_setup_complete = core.settings["SETUP_COMPLETE"];
   if (!is_setup_complete) return response.redirect("/register");
 
@@ -20,11 +19,15 @@ function register(request, response) {
 function login(request, response) {
   response.render("login.ejs", getDefaults(request));
 }
-function author(request, response) {
-  response.render("author.ejs", getDefaults(request));
+async function author(req, res) {
+  const user = await core.getUser({ id: req.params.author_id });
+  // FIXME: Bandage fix for author get error
+  if (!user.success) return res.redirect("/");
+  const profile = await core.getAuthorPage({ author_id: user.data.id });
+  res.render("author.ejs", { ...getDefaults(req), blog_post: profile.data });
 }
 async function blogList(req, res) {
-  const blog_list = await core.getBlogList({ owner_id: req.session.user?.id, page: req.query.page || 0 });
+  const blog_list = await core.getBlog({ owner_id: req.session.user?.id, page: req.query.page || 0, search: req.query.search, search_title: true });
   res.render("blogList.ejs", {
     ...getDefaults(req),
     blog_list: blog_list.data,
@@ -34,9 +37,9 @@ async function blogList(req, res) {
   });
 }
 async function blogSingle(req, res) {
-  const blog = await core.getBlogList({ id: req.params.blog_id });
+  const blog = await core.getBlog({ id: req.params.blog_id });
   if (blog.success === false) return res.redirect("/blog");
-  res.render("blogSingle.ejs", { ...getDefaults(req), blog_post: blog });
+  res.render("blogSingle.ejs", { ...getDefaults(req), blog_post: blog.data });
 }
 function blogNew(request, response) {
   // TODO: Turn date formatting into function
@@ -52,7 +55,8 @@ function blogNew(request, response) {
   response.render("blogNew.ejs", { ...getDefaults(request), existing_blog: existing_blog });
 }
 async function blogEdit(req, res) {
-  const existing_blog = await core.getBlogList({ id: req.params.blog_id, raw: true });
+  let existing_blog = await core.getBlog({ id: req.params.blog_id, raw: true });
+  if (existing_blog.success) existing_blog = existing_blog.data; // FIXME: Quickfix for .success/.data issue
 
   let published_time_parts = new Date(existing_blog.publish_date).toLocaleTimeString([], { timeStyle: "short" }).slice(0, 4).split(":");
   const formatted_time = `${published_time_parts[0].padStart(2, "0")}:${published_time_parts[1].padStart(2, "0")}`;
