@@ -8,10 +8,7 @@ function getBaseFeed() {
     description: `${process.env.WEBSITE_NAME} RSS Feed`,
     id: process.env.BASE_URL,
     link: process.env.BASE_URL,
-    // image: "http://example.com/image.png",
-    // favicon: "http://example.com/favicon.ico",
-    // copyright: "All rights reserved 2013, John Doe",
-    // generator: "awesome", // optional, default = 'Feed for Node.js'
+    favicon: `${process.env.BASE_URL}/favicon.ico`,
     feedLinks: {
       json: `${process.env.BASE_URL}/json`,
       atom: `${process.env.BASE_URL}/atom`,
