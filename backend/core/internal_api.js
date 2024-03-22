@@ -9,8 +9,7 @@ async function postRegister(req, res) {
 
   // User registration disabled?
   // We also check if the server was setup. If it was not set up, the server will proceed anyways.
-  if (!core.settings["ACCOUNT_REGISTRATION"] && core.settings["SETUP_COMPLETE"])
-    return res.json({ success: false, message: "Account registrations are disabled" });
+  if (!core.settings["ACCOUNT_REGISTRATION"] && core.settings["SETUP_COMPLETE"]) return res.json({ success: false, message: "Account registrations are disabled" });
 
   // User data valid?
   if (!form_validation.success) return res.json({ success: false, message: form_validation.message });
@@ -70,8 +69,15 @@ async function deleteBlog(req, res) {
   return res.json(await core.deleteBlog(req.body.id, req.session.user.id));
 }
 async function patchBlog(req, res) {
+  // FIXME: validate does not return post id
+  // Can user change post?
+  // User is admin, or user is author
+
+  // Validate blog info
+  const valid = await validate.postBlog(req.body);
+
   // TODO: Permissions for updating blog
-  return res.json(await core.updateBlog(req.body, req.session.user.id));
+  return res.json(await core.updateBlog({ ...valid.data, id: req.body.id }, req.session.user.id));
 }
 
 module.exports = { postRegister, postLogin, postSetting, deleteImage, postBlog, deleteBlog, patchBlog };

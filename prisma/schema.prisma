@@ -36,8 +36,7 @@ model BlogPost {
   ownerid     String?
 
   // Tags
-  organization_tag String?
-  keyword_tags     String[]
+  tags     String[]
 
   // Dates
   publish_date DateTime?

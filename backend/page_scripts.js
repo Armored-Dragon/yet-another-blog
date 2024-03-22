@@ -27,7 +27,7 @@ async function author(req, res) {
   res.render("author.ejs", { ...getDefaults(req), blog_post: profile.data });
 }
 async function blogList(req, res) {
-  const blog_list = await core.getBlog({ owner_id: req.session.user?.id, page: req.query.page || 0, search: req.query.search, search_title: true });
+  const blog_list = await core.getBlog({ owner_id: req.session.user?.id, page: req.query.page || 0, search: req.query.search, search_tags: true, search_title: true });
   res.render("blogList.ejs", {
     ...getDefaults(req),
     blog_list: blog_list.data,

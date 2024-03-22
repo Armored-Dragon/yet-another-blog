@@ -74,7 +74,7 @@ async function registerUser(username, password, options) {
   return { success: true, message: `Successfully created ${username}` };
 }
 // Posts
-async function getBlog({ id, visibility = "PUBLISHED", owner_id, limit = 10, page = 0, tags = [], search_title = false, search_content = false, search }) {
+async function getBlog({ id, visibility = "PUBLISHED", owner_id, limit = 10, page = 0, search_title = false, search_content = false, search_tags = false, search }) {
   // If we have an ID, we want a single post
   if (id) {
     // Get the post by the id
@@ -110,14 +110,22 @@ async function getBlog({ id, visibility = "PUBLISHED", owner_id, limit = 10, pag
         ownerid: owner_id,
       },
     ],
-    AND: [],
+
+    AND: [
+      {
+        OR: [
+
+        ]
+      }
+    ],
   };
 
   // Build the "where_object" object
-  if (tags.length > 0) {
+  if (search){
+    if (search_tags) where_object["AND"][0]["OR"].push({ tags: { hasSome: [search?.toLowerCase()] }});
+    if (search_title) where_object["AND"][0]["OR"].push({ title: { contains: search, mode: "insensitive" } });
+    if (search_content) where_object["AND"][0]["OR"].push({ content: { contains: search, mode: "insensitive" } });
   }
-  if (search_title) where_object["AND"].push({ title: { contains: search, mode: "insensitive" } });
-  if (search_content) where_object["AND"].push({ content: { contains: search, mode: "insensitive" } });
 
   // Execute search
   const blog_posts = await prisma.blogPost.findMany({
@@ -171,6 +179,7 @@ async function postBlog(blog_post, owner_id) {
     content: blog_post.content,
     visibility: blog_post.visibility,
     publish_date: blog_post.publish_date,
+    tags: blog_post.tags,
   };
 
   // Save to database
@@ -203,13 +212,15 @@ async function postBlog(blog_post, owner_id) {
 }
 async function deleteBlog(blog_id, requester_id) {
   const user = await getUser({ id: requester_id });
-  const post = await getPost({ id: blog_id });
+  const post = await getBlog({ id: blog_id });
 
-  let can_delete = post.owner.id === user.data.id || user.data.role === "ADMIN";
+  if (!post.success) return { success: false, message: post.message || "Post does not exist" };
+
+  let can_delete = post.data.owner.id === user.data.id || user.data.role === "ADMIN";
 
   if (can_delete) {
-    await prisma.blogPost.delete({ where: { id: post.id } });
-    _deleteS3Directory(post.id, "blog");
+    await prisma.blogPost.delete({ where: { id: post.data.id } });
+    _deleteS3Directory(post.data.id, "blog");
     return { success: true };
   }
 
@@ -217,27 +228,35 @@ async function deleteBlog(blog_id, requester_id) {
 }
 async function updateBlog(blog_post, requester_id) {
   const user = await getUser({ id: requester_id });
-  const post = await getPost({ id: blog_post.id, raw: true });
+  const post = await getBlog({ id: blog_post.id, raw: true });
+  let publish_date = null;
 
   delete blog_post.id;
 
-  let can_update = post.owner.id === user.data.id || user.data.role === "ADMIN";
+  if (!post.success) return { success: false, message: post.message || "Post not found" };
+
+  let can_update = post.data.owner.id === user.data.id || user.data.role === "ADMIN";
 
   if (!can_update) return { success: false, message: "User not permitted" };
 
-  const [year, month, day] = blog_post.date.split("-");
-  const [hour, minute] = blog_post.time.split(":");
-  let publish_date = new Date(year, month - 1, day, hour, minute);
+  // FIXME: Unsure if this actually works
+  // Check if we already have a formatted publish date
+  if (typeof blog_post.publish_date !== "object") {
+    const [year, month, day] = blog_post.date.split("-");
+    const [hour, minute] = blog_post.time.split(":");
+    publish_date = new Date(year, month - 1, day, hour, minute);
+  }
 
   let blog_post_formatted = {
     title: blog_post.title,
     description: blog_post.description,
     content: blog_post.content,
     visibility: blog_post.unlisted ? "UNLISTED" : "PUBLISHED",
-    publish_date: publish_date,
+    publish_date: publish_date || blog_post.publish_date,
+    tags: blog_post.tags,
   };
 
-  await prisma.blogPost.update({ where: { id: post.id }, data: blog_post_formatted });
+  await prisma.blogPost.update({ where: { id: post.data.id }, data: blog_post_formatted });
 
   let uploaded_images = [];
   let uploaded_thumbnail = "DEFAULT";
@@ -253,24 +272,24 @@ async function updateBlog(blog_post, requester_id) {
   }
 
   let data_to_update = {
-    images: [...post.raw_images, ...uploaded_images],
+    images: [...post.data.raw_images, ...uploaded_images],
   };
 
   if (blog_post.thumbnail) {
     const image_data = Buffer.from(blog_post.thumbnail.data_blob.split(",")[1], "base64");
-    const name = await _uploadImage(post.id, "blog", true, image_data, blog_post.thumbnail.id);
+    const name = await _uploadImage(post.data.id, "blog", true, image_data, blog_post.thumbnail.id);
     uploaded_thumbnail = name;
 
     data_to_update.thumbnail = uploaded_thumbnail;
   }
 
-  await prisma.blogPost.update({ where: { id: post.id }, data: data_to_update });
+  await prisma.blogPost.update({ where: { id: post.data.id }, data: data_to_update });
 
   return { success: true };
 }
 async function deleteImage(image, requester_id) {
   const user = await getUser({ id: requester_id });
-  const post = await getPost({ id: image.parent, raw: true });
+  const post = await getBlog({ id: image.parent, raw: true });
 
   // Check if post exists
   if (!post) return { success: false, message: "Post does not exist" };
@@ -391,9 +410,7 @@ function _format_blog_content(content, images) {
   const video = /{video:([^}]+)}/g;
 
   content = content.replace(video, (match, inner_content) => {
-    return `<div class='video-embed'><iframe src="${_getVideoEmbed(
-      inner_content
-    )}" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+    return `<div class='video-embed'><iframe src="${_getVideoEmbed(inner_content)}" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
   });
 
   content = content.replace(image_regex, (match, image_name) => {

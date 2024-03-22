@@ -88,9 +88,17 @@ async function publishBlog(unlisted, edit) {
     description: qs("#description").value,
     content: qs("#content").value,
     visibility: unlisted ? "UNLISTED" : "PUBLISHED",
+    tags: [],
     date: qs("#date").value,
     time: qs("#time").value,
   };
+
+  // Get our tags, trim them, then shove them into an array
+  const tags_value = qs("#tags").value || "";
+  if (tags_value.length) {
+    let tags_array = qs("#tags").value.split(",");
+    tags_array.forEach((tag) => form_data.tags.push(tag.trim()));
+  }
 
   // If we have a thumbnail, read the thumbnail image and store it
   if (pending_thumbnail.data_blob) {
@@ -161,8 +169,7 @@ function customDragString() {
 }
 
 function updateImages() {
-  const image_div = (img_id, img_url) =>
-    `<div class="image"><img data-image_id="${img_id}" src="${img_url}" /><div><a onclick="deleteImage('${img_id}')">X</a></div></div>`;
+  const image_div = (img_id, img_url) => `<div class="image"><img data-image_id="${img_id}" src="${img_url}" /><div><a onclick="deleteImage('${img_id}')">X</a></div></div>`;
 
   // Clear existing listings
   qsa(".e-image-area .image").forEach((entry) => entry.remove());

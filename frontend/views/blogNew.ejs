@@ -67,7 +67,9 @@
         </div>
         <textarea id="content" placeholder="Tell us about your subject..."><%= existing_blog.raw_content %></textarea>
       </div>
-
+      <div class="e-tags">
+        <input id="tags" type="text" placeholder="Enter a comma separated list of tags" value="<%= existing_blog.tags %>" />
+      </div>
       <div class="e-settings">
         <div class="publish-date">
           <div>Publish On</div>

@@ -25,6 +25,19 @@ async function postBlog(blog_object) {
   const [hour, minute] = blog_object.time.split(":");
   let publish_date = new Date(year, month - 1, day, hour, minute);
 
+  // Go though our tags and ensure they are:
+  let valid_tag_array = [];
+  blog_object.tags.forEach((tag) => {
+    // Trimmed
+    tag = tag.trim();
+
+    // Lowercase
+    tag = tag.toLowerCase();
+
+    // Non-empty
+    if (tag.length !== 0) valid_tag_array.push(tag);
+  });
+
   // Format our data to save
   let blog_post_formatted = {
     title: blog_object.title,
@@ -32,6 +45,7 @@ async function postBlog(blog_object) {
     content: blog_object.content,
     visibility: blog_object.visibility,
     publish_date: publish_date,
+    tags: valid_tag_array,
     images: blog_object.images,
     thumbnail: blog_object.thumbnail,
   };

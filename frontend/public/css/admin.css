@@ -221,6 +221,7 @@ a.bad {
 .container .setting-row .setting-toggleable input {
   padding: 0;
   margin: auto 0 auto auto;
+  height: 25px;
   width: 100px;
   box-sizing: border-box;
   text-align: center;

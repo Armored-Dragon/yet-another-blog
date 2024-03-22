@@ -145,6 +145,21 @@ $background-body: #222;
   }
 }
 
+.e-tags {
+  min-height: 40px;
+  width: 100%;
+  background-color: $background-body;
+  display: flex;
+  flex-direction: row;
+  padding: 5px;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+
+  input {
+    width: 100%;
+  }
+}
+
 .e-settings {
   min-height: 40px;
   width: 100%;
