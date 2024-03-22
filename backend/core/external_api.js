@@ -1,11 +1,11 @@
 const feed_lib = require("feed").Feed;
-const internal = require("./internal_api");
+const core = require("./core");
 
 // TODO: Expose ATOM Feed items
 function getBaseFeed() {
   return new feed_lib({
     title: process.env.WEBSITE_NAME,
-    description: `${process.env.S3_REGION} RSS Feed`,
+    description: `${process.env.WEBSITE_NAME} RSS Feed`,
     id: process.env.BASE_URL,
     link: process.env.BASE_URL,
     // image: "http://example.com/image.png",
@@ -24,7 +24,7 @@ async function getFeed({ type = "rss" }) {
   let feed = getBaseFeed();
 
   // Get posts
-  let posts = await internal.getBlogList({}, { limit: 20 });
+  let posts = await core.getBlog({ limit: 20 }); // internal.getBlogList({}, { limit: 20 });
 
   // For each post, add a formatted object to the feed
   posts.data.forEach((post) => {
@@ -48,7 +48,7 @@ async function getFeed({ type = "rss" }) {
   });
   //   if (type === "rss") return feed.rss2();
   if (type === "atom") return feed.atom1();
-  //   if (type === "json") return feed.json1();
+  if (type === "json") return feed.json1();
 }
 
 module.exports = { getFeed };

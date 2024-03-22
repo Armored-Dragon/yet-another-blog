@@ -75,7 +75,10 @@ async function atom(req, res) {
   res.type("application/xml");
   res.send(await external.getFeed({ type: "atom" }));
 }
-
+async function jsonFeed(req, res) {
+  res.type("application/json");
+  res.send(await external.getFeed({ type: "json" }));
+}
 // Internal API ------------------------------
 
 module.exports = {
@@ -89,4 +92,5 @@ module.exports = {
   blogSingle,
   admin,
   atom,
+  jsonFeed,
 };

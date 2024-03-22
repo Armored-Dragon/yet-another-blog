@@ -46,6 +46,7 @@ app.get("/blog/new", checkAuthenticated, page_scripts.blogNew);
 app.get("/blog/:blog_id", page_scripts.blogSingle);
 app.get("/blog/:blog_id/edit", checkAuthenticated, page_scripts.blogEdit);
 app.get("/atom", page_scripts.atom);
+app.get("/json", page_scripts.jsonFeed);
 
 function checkAuthenticated(req, res, next) {
   if (req.session.user) return next();
