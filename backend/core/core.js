@@ -113,16 +113,14 @@ async function getBlog({ id, visibility = "PUBLISHED", owner_id, limit = 10, pag
 
     AND: [
       {
-        OR: [
-
-        ]
-      }
+        OR: [],
+      },
     ],
   };
 
   // Build the "where_object" object
-  if (search){
-    if (search_tags) where_object["AND"][0]["OR"].push({ tags: { hasSome: [search?.toLowerCase()] }});
+  if (search) {
+    if (search_tags) where_object["AND"][0]["OR"].push({ tags: { hasSome: [search?.toLowerCase()] } });
     if (search_title) where_object["AND"][0]["OR"].push({ title: { contains: search, mode: "insensitive" } });
     if (search_content) where_object["AND"][0]["OR"].push({ content: { contains: search, mode: "insensitive" } });
   }
@@ -391,11 +389,13 @@ async function _renderPost(blog_post, raw, { post_type = "blog" } = {}) {
   // get thumbnail URL
   blog_post.thumbnail = await _getImage(blog_post.id, post_type, blog_post.thumbnail);
 
-  // Render the markdown contents of the post
-  blog_post.content = md.render(blog_post.content);
+  if (blog_post.content) {
+    // Render the markdown contents of the post
+    blog_post.content = md.render(blog_post.content);
 
-  // Replace custom formatting with what we want
-  blog_post.content = _format_blog_content(blog_post.content, blog_post.images);
+    // Replace custom formatting with what we want
+    blog_post.content = _format_blog_content(blog_post.content, blog_post.images);
+  }
 
   return blog_post;
 }
