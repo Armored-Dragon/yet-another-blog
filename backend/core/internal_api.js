@@ -38,7 +38,6 @@ async function postLogin(req, res) {
 async function postSetting(request, response) {
   const user = await core.getUser({ id: request.session.user.id });
 
-  // TODO: Permissions for changing settings
   if (!user.success) return response.json({ success: false, message: user.message });
   if (user.data.role !== "ADMIN") return response.json({ success: false, message: "User is not permitted" });
 
