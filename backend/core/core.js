@@ -3,14 +3,7 @@ const prisma = new PrismaClient();
 const sharp = require("sharp");
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsCommand, DeleteObjectsCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const s3 = new S3Client({
-  credentials: {
-    accessKeyId: process.env.S3_ACCESS_KEY,
-    secretAccessKey: process.env.S3_SECRET_KEY,
-  },
-  region: process.env.S3_REGION,
-  endpoint: process.env.S3_ENDPOINT,
-});
+let s3;
 const md = require("markdown-it")()
   .use(require("markdown-it-underline"))
   .use(require("markdown-it-footnote"))
@@ -40,9 +33,32 @@ let settings = {
   BLOG_MINIMUM_DESCRIPTION_LENGTH: 7,
   BLOG_MINIMUM_CONTENT_LENGTH: 7,
 };
+let use_s3_storage = false;
 let groups = [];
+_initS3Storage();
 _getSettings();
 _getGroups();
+
+// Checks to see if S3 storage is set
+function _initS3Storage() {
+  if (process.env.S3_ACCESS_KEY && process.env.S3_SECRET_KEY && process.env.S3_REGION && process.env.S3_ENDPOINT) {
+    console.log("S3 Server configured. Proceeding using S3 bucket");
+    use_s3_storage = true;
+    s3 = new S3Client({
+      credentials: {
+        accessKeyId: process.env.S3_ACCESS_KEY,
+        secretAccessKey: process.env.S3_SECRET_KEY,
+      },
+      region: process.env.S3_REGION,
+      endpoint: process.env.S3_ENDPOINT,
+    });
+    return;
+  } else {
+    console.log("S3 Server NOT SET. Media uploads will not work.");
+    use_s3_storage = false;
+    return;
+  }
+}
 
 async function registerUser(username, password, options) {
   let user_database_entry;
@@ -193,7 +209,7 @@ async function postBlog(blog_post, owner_id) {
       const image = blog_post.images[i];
       const image_data = Buffer.from(image.data_blob.split(",")[1], "base64");
       const name = await _uploadImage(database_blog.id, "blog", false, image_data, image.id);
-      uploaded_images.push(name);
+      if (name) uploaded_images.push(name);
     }
   }
 
@@ -201,7 +217,7 @@ async function postBlog(blog_post, owner_id) {
   if (blog_post.thumbnail) {
     const image_data = Buffer.from(blog_post.thumbnail.data_blob.split(",")[1], "base64");
     const name = await _uploadImage(database_blog.id, "blog", true, image_data, blog_post.thumbnail.id);
-    uploaded_thumbnail = name;
+    if (name) uploaded_thumbnail = name;
   }
 
   // Update the blog post to include references to our images
@@ -265,7 +281,7 @@ async function updateBlog(blog_post, requester_id) {
       const image = blog_post.images[i];
       const image_data = Buffer.from(image.data_blob.split(",")[1], "base64");
       const name = await _uploadImage(post.id, "blog", false, image_data, image.id);
-      uploaded_images.push(name);
+      if (name) uploaded_images.push(name);
     }
   }
 
@@ -276,7 +292,7 @@ async function updateBlog(blog_post, requester_id) {
   if (blog_post.thumbnail) {
     const image_data = Buffer.from(blog_post.thumbnail.data_blob.split(",")[1], "base64");
     const name = await _uploadImage(post.data.id, "blog", true, image_data, blog_post.thumbnail.id);
-    uploaded_thumbnail = name;
+    if (name) uploaded_thumbnail = name;
 
     data_to_update.thumbnail = uploaded_thumbnail;
   }
@@ -312,6 +328,7 @@ async function deleteImage(image, requester_id) {
   return { success: true };
 }
 async function _uploadImage(parent_id, parent_type, is_thumbnail, buffer, name) {
+  if (!use_s3_storage) return null;
   let size = { width: 1920, height: 1080 };
   if (is_thumbnail) size = { width: 300, height: 300 };
 
@@ -333,6 +350,7 @@ async function _uploadImage(parent_id, parent_type, is_thumbnail, buffer, name) 
   return name;
 }
 async function _getImage(parent_id, parent_type, name) {
+  if (!use_s3_storage) return null;
   let params;
   // Default image
   if (name === "DEFAULT") params = { Bucket: process.env.S3_BUCKET_NAME, Key: `defaults/thumbnail.webp` };
