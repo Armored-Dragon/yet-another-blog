@@ -1,0 +1,38 @@
+.page .page-center {
+  margin-top: 2rem;
+}
+.page .page-center .page-modal {
+  width: 400px;
+  height: 200px;
+  background-color: white;
+  margin: auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+.page .page-center .page-modal .title {
+  font-size: 1.4rem;
+  text-align: center;
+}
+.page .page-center .page-modal .login-part {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.page .page-center .page-modal .login-part input {
+  width: 100%;
+  padding: 0.25rem;
+  box-sizing: border-box;
+}
+.page .page-center .page-modal .action-container {
+  display: flex;
+  flex-direction: row-reverse;
+}
+.page .page-center .page-modal .action-container button {
+  width: 100px;
+  padding: 0.25rem;
+  box-sizing: border-box;
+  margin-left: auto;
+  height: 30px;
+}
+.page .page-center .page-modal .action-container a {
+  margin: auto auto auto 0;
+}

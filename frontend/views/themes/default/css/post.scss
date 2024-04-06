@@ -1,0 +1,25 @@
+.page .page-center {
+  background-color: white;
+  min-height: 100px;
+  box-shadow: #0000001c 0 0px 5px;
+  margin-top: 2rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  width: 1080px;
+  max-width: 1080px;
+  flex-direction: column;
+  border-radius: 5px;
+
+  .title {
+    font-size: 2rem;
+    font-weight: bold;
+  }
+
+  .image-container {
+    max-width: 100%;
+
+    img {
+      max-width: 100%;
+    }
+  }
+}

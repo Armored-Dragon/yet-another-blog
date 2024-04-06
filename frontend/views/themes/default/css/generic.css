@@ -1,0 +1,154 @@
+body {
+  background-color: #f9fafc;
+  margin: 0;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.header {
+  width: 100%;
+  height: 50px;
+  color: black;
+}
+.header .page-center {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+.header .logo {
+  display: flex;
+  height: 100%;
+  width: -moz-fit-content;
+  width: fit-content;
+  color: black;
+  text-decoration: none;
+}
+.header .logo .logo-icon {
+  height: 100%;
+  aspect-ratio: 1/1;
+}
+.header .logo .logo-icon::before {
+  background-image: url("../img/news.svg");
+  width: 30px;
+  height: 30px;
+}
+.header .logo .logo-title {
+  font-size: 2rem;
+  text-align: center;
+  margin: auto;
+}
+.header .navigation {
+  margin: 0 0 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+.header .navigation a {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  padding: 1rem;
+  box-sizing: border-box;
+  color: black;
+  text-decoration: none;
+}
+.header .navigation a span {
+  margin: auto;
+}
+
+.page-center {
+  width: 1080px;
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.page {
+  min-height: 700px;
+}
+
+.button {
+  background-color: #0072ff;
+  border-radius: 5px;
+  color: white;
+  min-width: 130px;
+  border: transparent;
+  transition: filter ease-in-out 0.1s;
+}
+
+.button:hover {
+  cursor: pointer;
+  filter: brightness(80%);
+}
+
+.button.bad {
+  background-color: #e70404;
+}
+
+.button.disabled {
+  filter: contrast(50%);
+  filter: brightness(50%);
+  cursor: default;
+}
+
+.atom-feed::before {
+  background-image: url("/img/rss.svg");
+}
+
+.json::before {
+  background-image: url("/img/json.svg");
+}
+
+.footer .page-center {
+  display: flex;
+  flex-direction: row;
+  text-align: center;
+  margin-top: 2rem;
+}
+.footer .page-center * {
+  width: -moz-fit-content;
+  width: fit-content;
+  margin: auto;
+}
+.footer .page-center * a {
+  margin-bottom: 0.5rem;
+  color: black;
+  text-decoration: none;
+}
+.footer .page-center .resources {
+  display: flex;
+  flex-direction: column;
+  width: 33.3333333333%;
+}
+.footer .page-center .info {
+  display: flex;
+  flex-direction: column;
+  width: 33.3333333333%;
+}
+
+.icon {
+  display: flex;
+}
+
+.icon::before {
+  content: "";
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-size: contain;
+  margin: auto 5px auto auto;
+}
+
+@media screen and (max-width: 1280px) {
+  .page-center {
+    width: 95%;
+  }
+}
+@media screen and (max-width: 760px) {
+  .post-list-container .post-list {
+    width: 100%;
+  }
+  .tag-list {
+    display: none;
+  }
+}

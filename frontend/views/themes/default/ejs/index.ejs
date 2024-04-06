@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="/css/index.css" />
+    <link rel="stylesheet" type="text/css" href="/css/generic.css" />
+    <title>Yet-Another-Blog</title>
+  </head>
+  <body>
+    <%- include("partials/header.ejs") %>
+
+    <div class="page">
+      <div class="page-center">
+        <div class="post-list-container">
+          <div class="post-list">
+            <% for(post of blog_list) { %>
+            <!--  -->
+            <%- include("partials/post.ejs", {post:post}) %>
+            <!--  -->
+            <% } %>
+          </div>
+          <div class="tag-list">
+            <div class="tag-header">TAGS</div>
+            <div class="list">
+              <div class="tag icon">Tag 1</div>
+            </div>
+          </div>
+        </div>
+        <%- include("partials/pagination.ejs") %>
+      </div>
+    </div>
+
+    <%- include("partials/footer.ejs") %>
+  </body>
+</html>

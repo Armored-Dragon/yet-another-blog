@@ -1,0 +1,14 @@
+{
+  "author": "Armored Dragon",
+  "version": "1.0.0",
+  "comment": "The default theme for Yet-Another-Blog",
+  "pages": {
+    "index": "/ejs/index.ejs",
+    "login": "/ejs/login.ejs",
+    "register": "/ejs/register.ejs",
+    "author": "/ejs/author.ejs",
+    "post": "/ejs/post.ejs",
+    "settings": "/ejs/login.ejs",
+    "user-settings": "/ejs/user-settings.ejs"
+  }
+}

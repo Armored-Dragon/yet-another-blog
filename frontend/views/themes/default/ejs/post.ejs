@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="../css/post.css" />
+    <link rel="stylesheet" type="text/css" href="../css/generic.css" />
+    <title>Yet-Another-Blog</title>
+  </head>
+  <body>
+    <%- include("partials/header.ejs") %>
+    <div class="page">
+      <div class="page-center">
+        <div class="title"><%= blog_post.title%></div>
+        <%- blog_post.content %>
+      </div>
+    </div>
+    <%- include("partials/footer.ejs") %>
+  </body>
+</html>

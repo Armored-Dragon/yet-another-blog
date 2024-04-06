@@ -1,0 +1,59 @@
+.page .page-center {
+  display: flex;
+  flex-direction: row;
+  min-height: 50px;
+  margin-top: 4rem;
+
+  .biography {
+    width: calc(100% * (2 / 3));
+    background-color: white;
+    min-height: 50px;
+    box-shadow: #0000001c 0 0px 5px;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+  .about {
+    width: calc(100% * (1 / 3));
+    background-color: white;
+    min-height: 50px;
+    margin: 0 1rem;
+    padding: 1rem;
+    box-sizing: border-box;
+    box-shadow: #0000001c 0 0px 5px;
+
+    .profile-picture {
+      margin: auto auto 1.5rem auto;
+      display: flex;
+
+      img {
+        margin: auto;
+        max-height: 200px;
+        max-width: 200px;
+      }
+    }
+
+    .displayname {
+      font-size: 1.4rem;
+      text-align: center;
+    }
+
+    .stat {
+      color: gray;
+      font-size: 1rem;
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+
+    .sociallist {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 3rem;
+
+      .link {
+        text-decoration: none;
+        color: black;
+        margin: auto;
+      }
+    }
+  }
+}

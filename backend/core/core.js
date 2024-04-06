@@ -21,23 +21,19 @@ let settings = {
   HIDE_LOGIN: false,
   BLOG_UPLOADING: false,
 
-  CD_RSS: false,
-  CD_AP: false,
+  CD_RSS: true,
+  CD_JSON: true,
 
   WEBSITE_NAME: "",
   PLAUSIBLE_URL: "",
 
   USER_MINIMUM_PASSWORD_LENGTH: 7,
 
-  BLOG_MINIMUM_TITLE_LENGTH: 7,
-  BLOG_MINIMUM_DESCRIPTION_LENGTH: 7,
-  BLOG_MINIMUM_CONTENT_LENGTH: 7,
+  theme: "default",
 };
 let use_s3_storage = false;
-let groups = [];
 _initS3Storage();
 _getSettings();
-_getGroups();
 
 // Checks to see if S3 storage is set
 function _initS3Storage() {
@@ -505,14 +501,16 @@ async function postSetting(key, value) {
     if (!Object.keys(settings).includes(key)) return { success: false, message: "Setting not valid" };
 
     await prisma.setting.upsert({ where: { id: key }, update: { value: value }, create: { id: key, value: value } });
-    settings[key] = JSON.parse(value);
+    try {
+      settings[key] = JSON.parse(value);
+    } catch {
+      settings[key] = value;
+    }
 
     return { success: true };
   } catch (e) {
     return { success: false, message: e.message };
   }
 }
-async function _getGroups() {
-  const group_list = await prisma.group.findMany();
-}
+
 module.exports = { settings, registerUser, getUser, getAuthorPage, postBlog, updateBlog, getBlog, deleteBlog, deleteImage, postSetting, getSetting };
