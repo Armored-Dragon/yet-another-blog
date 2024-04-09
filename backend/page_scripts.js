@@ -25,7 +25,7 @@ async function index(request, response) {
   });
 }
 function register(request, response) {
-  response.render("register.ejs", getDefaults(request));
+  response.render(getThemePage("register"), getDefaults(request));
 }
 function login(request, response) {
   response.render(getThemePage("login"), getDefaults(request));
