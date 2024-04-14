@@ -1,6 +1,5 @@
 .page .page-center {
   background-color: white;
-  min-height: 100px;
   box-shadow: rgba(0, 0, 0, 0.1098039216) 0 0px 5px;
   margin-top: 2rem;
   padding: 1rem;
@@ -19,4 +18,10 @@
 }
 .page .page-center .image-container img {
   max-width: 100%;
+}
+.page .page-center .horizontal-button-container {
+  width: 100%;
+}
+.page .page-center .horizontal-button-container button {
+  height: 2rem;
 }

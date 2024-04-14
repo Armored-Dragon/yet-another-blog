@@ -4,6 +4,7 @@ const sharp = require("sharp");
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsCommand, DeleteObjectsCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 let s3;
+const crypto = require("crypto");
 const md = require("markdown-it")()
   .use(require("markdown-it-underline"))
   .use(require("markdown-it-footnote"))
@@ -195,27 +196,6 @@ async function postBlog(blog_post, owner_id) {
   // Save to database
   const database_blog = await prisma.blogPost.create({ data: { ...blog_post_formatted, owner: { connect: { id: owner_id } } } });
 
-  // Init image vars
-  let uploaded_images = [];
-  let uploaded_thumbnail = "DEFAULT";
-
-  // For Each image, upload to S3
-  if (blog_post.images) {
-    for (let i = 0; blog_post.images.length > i; i++) {
-      const image = blog_post.images[i];
-      const image_data = Buffer.from(image.data_blob.split(",")[1], "base64");
-      const name = await _uploadImage(database_blog.id, "blog", false, image_data, image.id);
-      if (name) uploaded_images.push(name);
-    }
-  }
-
-  // Upload thumbnail to S3
-  if (blog_post.thumbnail) {
-    const image_data = Buffer.from(blog_post.thumbnail.data_blob.split(",")[1], "base64");
-    const name = await _uploadImage(database_blog.id, "blog", true, image_data, blog_post.thumbnail.id);
-    if (name) uploaded_thumbnail = name;
-  }
-
   // Update the blog post to include references to our images
   await prisma.blogPost.update({ where: { id: database_blog.id }, data: { images: uploaded_images, thumbnail: uploaded_thumbnail } });
   return { success: true, blog_id: database_blog.id };
@@ -256,7 +236,6 @@ async function updateBlog(blog_post, requester_id) {
     const [hour, minute] = blog_post.time.split(":");
     publish_date = new Date(year, month - 1, day, hour, minute);
   }
-
   let blog_post_formatted = {
     title: blog_post.title,
     description: blog_post.description,
@@ -264,36 +243,10 @@ async function updateBlog(blog_post, requester_id) {
     visibility: blog_post.unlisted ? "UNLISTED" : "PUBLISHED",
     publish_date: publish_date || blog_post.publish_date,
     tags: blog_post.tags,
+    images: [...post.data.raw_images, ...blog_post.images],
   };
 
   await prisma.blogPost.update({ where: { id: post.data.id }, data: blog_post_formatted });
-
-  let uploaded_images = [];
-  let uploaded_thumbnail = "DEFAULT";
-
-  // For Each image, upload to S3
-  if (blog_post.images) {
-    for (let i = 0; blog_post.images.length > i; i++) {
-      const image = blog_post.images[i];
-      const image_data = Buffer.from(image.data_blob.split(",")[1], "base64");
-      const name = await _uploadImage(post.id, "blog", false, image_data, image.id);
-      if (name) uploaded_images.push(name);
-    }
-  }
-
-  let data_to_update = {
-    images: [...post.data.raw_images, ...uploaded_images],
-  };
-
-  if (blog_post.thumbnail) {
-    const image_data = Buffer.from(blog_post.thumbnail.data_blob.split(",")[1], "base64");
-    const name = await _uploadImage(post.data.id, "blog", true, image_data, blog_post.thumbnail.id);
-    if (name) uploaded_thumbnail = name;
-
-    data_to_update.thumbnail = uploaded_thumbnail;
-  }
-
-  await prisma.blogPost.update({ where: { id: post.data.id }, data: data_to_update });
 
   return { success: true };
 }
@@ -323,19 +276,18 @@ async function deleteImage(image, requester_id) {
 
   return { success: true };
 }
-async function _uploadImage(parent_id, parent_type, is_thumbnail, buffer, name) {
+async function postImage(post_id, buffer) {
   if (!use_s3_storage) return null;
   let size = { width: 1920, height: 1080 };
-  if (is_thumbnail) size = { width: 300, height: 300 };
+  const image_name = crypto.randomUUID();
 
-  const compressed_image = await sharp(buffer, { animated: true })
+  const compressed_image = await sharp(Buffer.from(buffer.split(",")[1], "base64"), { animated: true })
     .resize({ ...size, withoutEnlargement: true, fit: "inside" })
     .webp({ quality: 90, animated: true })
     .toBuffer();
-
   const params = {
     Bucket: process.env.S3_BUCKET_NAME,
-    Key: `${process.env.ENVIRONMENT}/${parent_type}/${parent_id}/${name}.webp`,
+    Key: `${process.env.ENVIRONMENT}/posts/${post_id}/${image_name}.webp`,
     Body: compressed_image,
     ContentType: "image/webp",
   };
@@ -343,7 +295,7 @@ async function _uploadImage(parent_id, parent_type, is_thumbnail, buffer, name) 
   const command = new PutObjectCommand(params);
   await s3.send(command);
 
-  return name;
+  return image_name;
 }
 async function _getImage(parent_id, parent_type, name) {
   if (!use_s3_storage) return null;
@@ -383,7 +335,7 @@ async function _deleteS3Directory(id, type) {
   // If there are more objects to delete (truncated result), recursively call the function again
   // if (listed_objects.IsTruncated) await emptyS3Directory(bucket, dir);
 }
-async function _renderPost(blog_post, raw, { post_type = "blog" } = {}) {
+async function _renderPost(blog_post, raw) {
   if (raw) {
     // Had to do this, only God knows why.
     blog_post.raw_images = [];
@@ -392,16 +344,12 @@ async function _renderPost(blog_post, raw, { post_type = "blog" } = {}) {
     blog_post.raw_thumbnail = blog_post.thumbnail;
     blog_post.raw_content = blog_post.content;
   }
-
   if (blog_post.images) {
     // Get the image urls for the post
     for (i = 0; blog_post.images.length > i; i++) {
-      blog_post.images[i] = await _getImage(blog_post.id, post_type, blog_post.images[i]);
+      blog_post.images[i] = await _getImage(blog_post.id, "posts", blog_post.images[i]);
     }
   }
-
-  // get thumbnail URL
-  blog_post.thumbnail = await _getImage(blog_post.id, post_type, blog_post.thumbnail);
 
   if (blog_post.content) {
     // Render the markdown contents of the post
@@ -487,6 +435,12 @@ async function _getSettings() {
     return (settings[key] = value);
   });
 }
+// Create a new empty "post".
+// Used so uploaded images know where to go
+async function newPost(owner_id) {
+  const post = await prisma.blogPost.create({ data: { owner: { connect: { id: owner_id } } } });
+  return post.id;
+}
 
 async function getSetting(key, { parse = true }) {
   if (!settings[key]) return null;
@@ -513,4 +467,4 @@ async function postSetting(key, value) {
   }
 }
 
-module.exports = { settings, registerUser, getUser, getAuthorPage, postBlog, updateBlog, getBlog, deleteBlog, deleteImage, postSetting, getSetting };
+module.exports = { settings, newPost, registerUser, getUser, getAuthorPage, postBlog, updateBlog, getBlog, deleteBlog, postImage, deleteImage, postSetting, getSetting };

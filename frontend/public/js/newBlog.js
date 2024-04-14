@@ -6,7 +6,7 @@ let pending_thumbnail = {};
 
 const thumbnail_area = qs(".e-thumbnail");
 const image_area = qs(".e-image-area");
-const text_area = qs(".e-content textarea");
+const post_content_area = qs(".e-content textarea");
 
 // Style
 function stylizeDropArea(element) {
@@ -27,13 +27,13 @@ function stylizeDropArea(element) {
 }
 
 // Auto resize on page load
-text_area.style.height = text_area.scrollHeight + "px";
-text_area.style.minHeight = text_area.scrollHeight + "px";
+post_content_area.style.height = post_content_area.scrollHeight + "px";
+post_content_area.style.minHeight = post_content_area.scrollHeight + "px";
 
 // Auto expand blog area
-text_area.addEventListener("input", (e) => {
-  text_area.style.height = text_area.scrollHeight + "px";
-  text_area.style.minHeight = e.target.scrollHeight + "px";
+post_content_area.addEventListener("input", (e) => {
+  post_content_area.style.height = post_content_area.scrollHeight + "px";
+  post_content_area.style.minHeight = e.target.scrollHeight + "px";
 });
 
 stylizeDropArea(thumbnail_area);
@@ -204,12 +204,12 @@ qs("#insert-sup").addEventListener("click", () => textareaAction("^", undefined,
 
 function textareaAction(insert, cursor_position, dual_side) {
   // Insert the custom string at the cursor position
-  const selectionStart = text_area.selectionStart;
-  const selectionEnd = text_area.selectionEnd;
+  const selectionStart = post_content_area.selectionStart;
+  const selectionEnd = post_content_area.selectionEnd;
 
-  const textBefore = text_area.value.substring(0, selectionStart);
-  const textAfter = text_area.value.substring(selectionEnd);
-  const selectedText = text_area.value.substring(selectionStart, selectionEnd);
+  const textBefore = post_content_area.value.substring(0, selectionStart);
+  const textAfter = post_content_area.value.substring(selectionEnd);
+  const selectedText = post_content_area.value.substring(selectionStart, selectionEnd);
 
   let updatedText;
 
@@ -219,34 +219,34 @@ function textareaAction(insert, cursor_position, dual_side) {
     updatedText = `${textBefore}${insert}${selectedText}${textAfter}`;
   }
 
-  text_area.value = updatedText;
+  post_content_area.value = updatedText;
 
   // Set the cursor position after the custom string
   qs(".e-content textarea").focus();
   const newPosition = selectionStart + (cursor_position || insert.length);
-  text_area.setSelectionRange(newPosition, newPosition);
+  post_content_area.setSelectionRange(newPosition, newPosition);
 }
 
-text_area.addEventListener("drop", (event) => {
+post_content_area.addEventListener("drop", (event) => {
   event.preventDefault();
 
   // Get the custom string from the drag data
   const customString = `\{image:${event.dataTransfer.getData("text/plain")}\}\n`;
 
   // Insert the custom string at the cursor position
-  const selectionStart = text_area.selectionStart;
-  const selectionEnd = text_area.selectionEnd;
+  const selectionStart = post_content_area.selectionStart;
+  const selectionEnd = post_content_area.selectionEnd;
 
-  const textBefore = text_area.value.substring(0, selectionStart);
-  const textAfter = text_area.value.substring(selectionEnd);
+  const textBefore = post_content_area.value.substring(0, selectionStart);
+  const textAfter = post_content_area.value.substring(selectionEnd);
 
   const updatedText = textBefore + customString + textAfter;
 
-  text_area.value = updatedText;
+  post_content_area.value = updatedText;
 
   // Set the cursor position after the custom string
   const newPosition = selectionStart + customString.length;
-  text_area.setSelectionRange(newPosition, newPosition);
+  post_content_area.setSelectionRange(newPosition, newPosition);
 });
 
 // Load the existing images into our existing_images variable

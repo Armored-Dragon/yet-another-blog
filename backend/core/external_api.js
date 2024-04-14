@@ -1,7 +1,6 @@
 const feed_lib = require("feed").Feed;
 const core = require("./core");
 
-// TODO: Expose ATOM Feed items
 function getBaseFeed() {
   return new feed_lib({
     title: core.settings.WEBSITE_NAME,

@@ -4,11 +4,21 @@
     <meta charset="utf-8" />
     <link rel="stylesheet" type="text/css" href="../css/post.css" />
     <link rel="stylesheet" type="text/css" href="../css/generic.css" />
+    <script src="/js/generic.js"></script>
     <title>Yet-Another-Blog</title>
   </head>
   <body>
     <%- include("partials/header.ejs") %>
     <div class="page">
+      <%if(logged_in_user) {%>
+      <div class="page-center">
+        <div class="horizontal-button-container">
+          <button onclick="deletePost()" href="#" class="button bad"><span>Delete Post</span></button>
+          <button onclick="window.location = '/post/<%=blog_post.id %>/edit'" class="button caution"><span>Edit Post</span></button>
+        </div>
+      </div>
+      <%}%>
+
       <div class="page-center">
         <div class="title"><%= blog_post.title%></div>
         <%- blog_post.content %>
@@ -17,3 +27,5 @@
     <%- include("partials/footer.ejs") %>
   </body>
 </html>
+
+<script defer src="/js/post.js"></script>

@@ -43,6 +43,11 @@ async function postSetting(request, response) {
 
   response.json(await core.postSetting(request.body.setting_name, request.body.value));
 }
+async function postImage(request, response) {
+  // TODO: Permissions for uploading images
+  // TODO: Verification for image uploading
+  return response.json(await core.postImage(request.body.post_id, request.body.buffer));
+}
 async function deleteImage(req, res) {
   // TODO: Permissions for deleting image
   return res.json(await core.deleteImage(req.body, req.session.user.id));
@@ -79,4 +84,4 @@ async function patchBlog(req, res) {
   return res.json(await core.updateBlog({ ...valid.data, id: req.body.id }, req.session.user.id));
 }
 
-module.exports = { postRegister, postLogin, postSetting, deleteImage, postBlog, deleteBlog, patchBlog };
+module.exports = { postRegister, postLogin, postSetting, postImage, deleteImage, postBlog, deleteBlog, patchBlog };

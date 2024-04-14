@@ -85,6 +85,10 @@ body {
   background-color: #e70404;
 }
 
+.button.caution {
+  background-color: #6d6d6c;
+}
+
 .button.disabled {
   filter: contrast(50%);
   filter: brightness(50%);
@@ -137,6 +141,11 @@ body {
   height: 20px;
   background-size: contain;
   margin: auto 5px auto auto;
+}
+
+.separator {
+  border-bottom: 2px solid #b3b3b3;
+  margin-bottom: 1rem;
 }
 
 @media screen and (max-width: 1280px) {

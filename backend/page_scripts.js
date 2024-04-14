@@ -4,12 +4,10 @@ const core = require("./core/core");
 function getThemePage(page_name) {
   return `themes/${core.settings.theme}/ejs/${page_name}.ejs`;
 }
-
 function getDefaults(req) {
   // TODO: Fix reference to website_name
   return { logged_in_user: req.session.user, website_name: core.settings.WEBSITE_NAME || "Yet-Another-Blog", settings: core.settings };
 }
-
 async function index(request, response) {
   // Check if the master admin has been created
   // const is_setup_complete = core.settings["SETUP_COMPLETE"];
@@ -53,18 +51,9 @@ async function blogSingle(req, res) {
   if (blog.success === false) return res.redirect("/");
   res.render(getThemePage("post"), { ...getDefaults(req), blog_post: blog.data });
 }
-function blogNew(request, response) {
-  // TODO: Turn date formatting into function
-  let existing_blog = {};
-  let published_date_parts = new Date().toLocaleDateString().split("/");
-  const formatted_date = `${published_date_parts[2]}-${published_date_parts[0].padStart(2, "0")}-${published_date_parts[1].padStart(2, "0")}`;
-  existing_blog.publish_date = formatted_date;
-
-  let published_time_parts = new Date().toLocaleTimeString([], { timeStyle: "short" }).slice(0, 4).split(":");
-  const formatted_time = `${published_time_parts[0].padStart(2, "0")}:${published_time_parts[1].padStart(2, "0")}`;
-  existing_blog.publish_time = formatted_time;
-
-  response.render("blogNew.ejs", { ...getDefaults(request), existing_blog: existing_blog });
+async function blogNew(request, response) {
+  const new_post = await core.newPost(request.session.user.id);
+  return response.redirect(`/post/${new_post}/edit`);
 }
 async function blogEdit(req, res) {
   let existing_blog = await core.getBlog({ id: req.params.blog_id, raw: true });
@@ -78,7 +67,7 @@ async function blogEdit(req, res) {
   const formatted_date = `${published_date_parts[2]}-${published_date_parts[0].padStart(2, "0")}-${published_date_parts[1].padStart(2, "0")}`;
   existing_blog.publish_date = formatted_date;
 
-  res.render("blogNew.ejs", { ...getDefaults(req), existing_blog: existing_blog });
+  res.render(getThemePage("postNew"), { ...getDefaults(req), existing_blog: existing_blog });
 }
 async function admin(request, response) {
   response.render(getThemePage("admin-settings"), { ...getDefaults(request) });

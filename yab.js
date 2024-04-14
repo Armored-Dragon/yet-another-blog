@@ -31,10 +31,11 @@ app.use(
 app.post("/login", checkNotAuthenticated, internal.postLogin);
 app.post("/register", checkNotAuthenticated, internal.postRegister);
 app.post("/setting", checkAuthenticated, internal.postSetting);
-app.post("/api/web/blog", checkAuthenticated, internal.postBlog);
-app.delete("/api/web/blog/image", checkAuthenticated, internal.deleteImage);
-app.delete("/api/web/blog", checkAuthenticated, internal.deleteBlog);
-app.patch("/api/web/blog", checkAuthenticated, internal.patchBlog);
+app.post("/api/web/post", checkAuthenticated, internal.postBlog);
+app.post("/api/web/image", checkAuthenticated, internal.postImage);
+app.delete("/api/web/post/image", checkAuthenticated, internal.deleteImage);
+app.delete("/api/web/post", checkAuthenticated, internal.deleteBlog);
+app.patch("/api/web/post", checkAuthenticated, internal.patchBlog);
 
 // app.delete("/logout", page_scripts.logout);
 
@@ -45,9 +46,9 @@ app.get("/register", checkNotAuthenticated, page_scripts.register);
 app.get("/author/:author_id", page_scripts.author);
 app.get("/admin", checkAuthenticated, page_scripts.admin);
 app.get("/posts", page_scripts.blogList);
-app.get("/blog/new", checkAuthenticated, page_scripts.blogNew);
-app.get("/blog/:blog_id", page_scripts.blogSingle);
-app.get("/blog/:blog_id/edit", checkAuthenticated, page_scripts.blogEdit);
+app.get("/post/new", checkAuthenticated, page_scripts.blogNew);
+app.get("/post/:blog_id", page_scripts.blogSingle);
+app.get("/post/:blog_id/edit", checkAuthenticated, page_scripts.blogEdit);
 app.get("/atom", page_scripts.atom);
 app.get("/json", page_scripts.jsonFeed);
 
