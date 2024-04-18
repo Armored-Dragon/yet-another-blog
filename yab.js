@@ -36,6 +36,8 @@ app.post("/api/web/image", checkAuthenticated, internal.postImage);
 app.delete("/api/web/post/image", checkAuthenticated, internal.deleteImage);
 app.delete("/api/web/post", checkAuthenticated, internal.deleteBlog);
 app.patch("/api/web/post", checkAuthenticated, internal.patchBlog);
+app.patch("/api/web/biography", checkAuthenticated, internal.patchBiography);
+app.patch("/api/web/user", checkAuthenticated, internal.patchUser);
 
 // app.delete("/logout", page_scripts.logout);
 
@@ -44,6 +46,7 @@ app.get("/", page_scripts.index);
 app.get("/login", page_scripts.login);
 app.get("/register", checkNotAuthenticated, page_scripts.register);
 app.get("/author/:author_id", page_scripts.author);
+app.get("/author/:author_id/edit", checkAuthenticated, page_scripts.authorEdit);
 app.get("/admin", checkAuthenticated, page_scripts.admin);
 app.get("/posts", page_scripts.blogList);
 app.get("/post/new", checkAuthenticated, page_scripts.blogNew);

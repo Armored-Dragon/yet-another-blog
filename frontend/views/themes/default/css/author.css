@@ -2,7 +2,14 @@
   display: flex;
   flex-direction: row;
   min-height: 50px;
-  margin-top: 4rem;
+  background-color: white;
+  box-shadow: rgba(0, 0, 0, 0.1098039216) 0 0px 5px;
+  margin-top: 2rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  width: 1080px;
+  max-width: 1080px;
+  border-radius: 5px;
 }
 .page .page-center .biography {
   width: 66.6666666667%;
@@ -12,14 +19,22 @@
   padding: 1rem;
   box-sizing: border-box;
 }
+.page .page-center .biography .image-container {
+  max-width: 100%;
+}
+.page .page-center .biography .image-container img {
+  max-width: 100%;
+}
 .page .page-center .about {
   width: 33.3333333333%;
   background-color: white;
   min-height: 50px;
-  margin: 0 1rem;
+  margin: 0 0 0 1rem;
   padding: 1rem;
   box-sizing: border-box;
   box-shadow: rgba(0, 0, 0, 0.1098039216) 0 0px 5px;
+  height: -moz-fit-content;
+  height: fit-content;
 }
 .page .page-center .about .profile-picture {
   margin: auto auto 1.5rem auto;
@@ -49,4 +64,10 @@
   text-decoration: none;
   color: black;
   margin: auto;
+}
+
+.page .nobackground {
+  background-color: transparent;
+  box-shadow: none;
+  padding: 0;
 }

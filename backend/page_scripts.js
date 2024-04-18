@@ -13,7 +13,14 @@ async function index(request, response) {
   // const is_setup_complete = core.settings["SETUP_COMPLETE"];
   // if (!is_setup_complete) return response.redirect("/register");
 
-  const blog_list = await core.getBlog({ owner_id: request.session.user?.id, page: request.query.page || 0 });
+  const blog_list = await core.getPost({ requester_id: request.session.user?.id, page: request.query.page || 0 });
+
+  blog_list.data.forEach((post) => {
+    let published_date_parts = new Date(post.publish_date).toLocaleDateString().split("/");
+    const formatted_date = `${published_date_parts[2]}-${published_date_parts[0].padStart(2, "0")}-${published_date_parts[1].padStart(2, "0")}`;
+    post.publish_date = formatted_date;
+  });
+
   response.render(getThemePage("index"), {
     ...getDefaults(request),
     blog_list: blog_list.data,
@@ -29,15 +36,30 @@ function login(request, response) {
   response.render(getThemePage("login"), getDefaults(request));
 }
 async function author(req, res) {
-  const user = await core.getUser({ id: req.params.author_id });
+  const user = await core.getUser({ user_id: req.params.author_id });
   // FIXME: Bandage fix for author get error
   if (!user.success) return res.redirect("/");
-  const profile = await core.getAuthorPage({ author_id: user.data.id });
-  console.log(profile.data);
-  res.render(getThemePage("author"), { ...getDefaults(req), post: profile.data });
+  const profile = await core.getBiography({ author_id: user.data.id });
+  // TODO: Check for success
+  // const posts = await core.getBlog({ owner_id: user.data.id, raw: true });
+  const posts = await core.getPost({ requester_id: user.data.id });
+
+  res.render(getThemePage("author"), { ...getDefaults(req), post: { ...profile.data, post_count: posts.data.length } });
+}
+async function authorEdit(request, response) {
+  let author = await core.getBiography({ author_id: request.params.author_id });
+  if (!author.success) return response.redirect("/");
+  response.render(getThemePage("authorEdit"), { ...getDefaults(request), profile: author.data });
 }
 async function blogList(req, res) {
-  const blog_list = await core.getBlog({ owner_id: req.session.user?.id, page: req.query.page || 0, search: req.query.search, search_tags: true, search_title: true });
+  const blog_list = await core.getPost({ requester_id: req.session.user?.id }, { search: req.query.search, search_title: true });
+
+  blog_list.data.forEach((post) => {
+    let published_date_parts = new Date(post.publish_date).toLocaleDateString().split("/");
+    const formatted_date = `${published_date_parts[2]}-${published_date_parts[0].padStart(2, "0")}-${published_date_parts[1].padStart(2, "0")}`;
+    post.publish_date = formatted_date;
+  });
+
   res.render(getThemePage("postSearch"), {
     ...getDefaults(req),
     blog_list: blog_list.data,
@@ -47,16 +69,16 @@ async function blogList(req, res) {
   });
 }
 async function blogSingle(req, res) {
-  const blog = await core.getBlog({ id: req.params.blog_id });
+  const blog = await core.getPost({ post_id: req.params.blog_id });
   if (blog.success === false) return res.redirect("/");
   res.render(getThemePage("post"), { ...getDefaults(req), blog_post: blog.data });
 }
 async function blogNew(request, response) {
-  const new_post = await core.newPost(request.session.user.id);
+  const new_post = await core.newPost({ requester_id: request.session.user.id });
   return response.redirect(`/post/${new_post}/edit`);
 }
 async function blogEdit(req, res) {
-  let existing_blog = await core.getBlog({ id: req.params.blog_id, raw: true });
+  let existing_blog = await core.getPost({ post_id: req.params.blog_id });
   if (existing_blog.success) existing_blog = existing_blog.data; // FIXME: Quickfix for .success/.data issue
 
   let published_time_parts = new Date(existing_blog.publish_date).toLocaleTimeString([], { timeStyle: "short" }).slice(0, 4).split(":");
@@ -94,4 +116,5 @@ module.exports = {
   admin,
   atom,
   jsonFeed,
+  authorEdit,
 };

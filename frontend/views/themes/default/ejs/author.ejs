@@ -10,19 +10,28 @@
     <%- include("partials/header.ejs") %>
 
     <div class="page">
+      <%if(logged_in_user) {%>
       <div class="page-center">
+        <div class="horizontal-button-container">
+          <button onclick="location='/author/<%= post.owner.id %>/edit'" class="button"><span>Edit Account</span></button>
+        </div>
+      </div>
+      <%}%>
+
+      <div class="page-center nobackground">
         <div class="biography">
           <div class="title"><%= post.title %></div>
 
           <%- post.content %>
         </div>
         <div class="about">
-          <div class="profile-picture"><img src="" /></div>
-          <div class="displayname">DISPLAYNAME</div>
-          <div class="stat">Registered REGISTRATIONDATE</div>
-          <div class="stat">NUMPOSTS Posts</div>
+          <div class="profile-picture"><img src="<%= post.profile_picture %>" /></div>
+          <div class="displayname"><%= post.owner.display_name || post.owner.username %></div>
+          <!-- TODO: Format Date/time -->
+          <div class="stat">Registered <%= post.created_date.toLocaleString('en-US', { dateStyle:'medium' }) || "Null" %></div>
+          <div class="stat"><%= post.post_count %> Posts</div>
           <div class="sociallist">
-            <a class="link" href="#">Matrix</a>
+            <!-- <a class="link" href="#"></a> -->
           </div>
         </div>
       </div>
