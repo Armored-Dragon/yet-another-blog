@@ -14,6 +14,7 @@ async function index(request, response) {
   // if (!is_setup_complete) return response.redirect("/register");
 
   const blog_list = await core.getPost({ requester_id: request.session.user?.id, page: request.query.page || 0 });
+  const tags = await core.getTags();
 
   blog_list.data.forEach((post) => {
     let published_date_parts = new Date(post.publish_date).toLocaleDateString().split("/");
@@ -27,6 +28,7 @@ async function index(request, response) {
     pagination: blog_list.pagination,
     current_page: request.query.page || 0,
     loaded_page: request.path,
+    tags: tags,
   });
 }
 function register(request, response) {
@@ -52,7 +54,7 @@ async function authorEdit(request, response) {
   response.render(getThemePage("authorEdit"), { ...getDefaults(request), profile: author.data });
 }
 async function blogList(req, res) {
-  const blog_list = await core.getPost({ requester_id: req.session.user?.id }, { search: req.query.search, search_title: true });
+  const blog_list = await core.getPost({ requester_id: req.session.user?.id }, { search: req.query.search, search_title: true, search_tags: true, search_content: true });
 
   blog_list.data.forEach((post) => {
     let published_date_parts = new Date(post.publish_date).toLocaleDateString().split("/");

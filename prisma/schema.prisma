@@ -35,7 +35,7 @@ model Post {
   ownerid     String?
 
   // Tags
-  tags String[]
+  tags Tag[]
 
   // Dates
   publish_date DateTime?
@@ -60,6 +60,18 @@ model Setting {
 model Group {
   id          String   @unique
   permissions String[]
+}
+
+model Tag {
+  id    String  @id @unique @default(uuid())
+  name  String  @unique
+  type  TagMode @default(NORMAL)
+  posts Post[]
+}
+
+enum TagMode {
+  NORMAL
+  ALIAS
 }
 
 enum Role {

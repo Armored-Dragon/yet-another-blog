@@ -85,7 +85,8 @@
   height: -moz-fit-content;
   height: fit-content;
   background-color: lightgray;
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.5rem;
+  margin-right: 0.5rem;
 }
 .post-list-container .tag-list .list .tag::before {
   display: none;
@@ -98,6 +99,8 @@
   padding: 0.2rem 0.3rem;
   box-sizing: border-box;
   border-radius: 4px;
+  color: black;
+  text-decoration: none;
 }
 
 .tag::before {

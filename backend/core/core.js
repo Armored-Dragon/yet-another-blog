@@ -131,9 +131,19 @@ async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {},
   // Get a single post
   if (post_id) {
     let post;
-    post = await prisma.post.findUnique({ where: { id: post_id }, include: { owner: true } });
+    post = await prisma.post.findUnique({ where: { id: post_id }, include: { owner: true, tags: true } });
     if (!post) return _r(false, "Post does not exist");
     post = _stripPrivatePost(post);
+
+    // Tags
+    let post_tags = [];
+    post.raw_tags = [];
+    post.tags.forEach((tag) => {
+      post_tags.push(tag.name);
+      post.raw_tags.push();
+    });
+    post.tags = post_tags;
+
     // Render post
     return { success: true, data: await _renderPost(post) };
   }
@@ -170,7 +180,7 @@ async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {},
   };
   // Build the "where_object" object
   if (search) {
-    if (search_tags) where_object["AND"][0]["OR"].push({ tags: { hasSome: [search?.toLowerCase()] } });
+    if (search_tags) where_object["AND"][0]["OR"].push({ tags: { some: { name: search?.toLowerCase() } } });
     if (search_title) where_object["AND"][0]["OR"].push({ title: { contains: search, mode: "insensitive" } });
     if (search_content) where_object["AND"][0]["OR"].push({ content: { contains: search, mode: "insensitive" } });
   }
@@ -179,7 +189,7 @@ async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {},
     where: where_object,
     take: limit,
     skip: Math.max(page, 0) * limit,
-    include: { owner: true },
+    include: { owner: true, tags: true },
     orderBy: [{ publish_date: "desc" }, { created_date: "desc" }],
   });
 
@@ -187,6 +197,10 @@ async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {},
     post = _stripPrivatePost(post);
     post = await _renderPost(post);
     post_list.push(post);
+
+    let post_tags = [];
+    post.tags.forEach((tag) => post_tags.push(tag.name));
+    post.tags = post_tags;
   }
 
   // Calculate pagination
@@ -226,6 +240,20 @@ async function editPost({ requester_id, post_id, post_content }) {
     publish_date = new Date(year, month - 1, day, hour, minute);
   }
 
+  // Handle tags ----
+  let database_tag_list = [];
+  const existing_tags = post.tags?.map((tag) => ({ name: tag })) || [];
+
+  // Add new tags
+  for (let tag_index = 0; post_content.tags.length > tag_index; tag_index++) {
+    let tag = post_content.tags[tag_index];
+
+    // Check to see if tag exists, create if necessary,
+    let database_tag = await prisma.tag.upsert({ where: { name: tag }, update: {}, create: { name: tag } });
+
+    database_tag_list.push(database_tag);
+  }
+
   // Rebuild the post to save
   let post_formatted = {
     title: post_content.title,
@@ -233,7 +261,7 @@ async function editPost({ requester_id, post_id, post_content }) {
     content: post_content.content,
     visibility: post_content.visibility || "PRIVATE",
     publish_date: publish_date || post_content.publish_date,
-    tags: post_content.tags,
+    tags: { disconnect: [...existing_tags], connect: [...database_tag_list] },
     media: [...post.raw_media, ...post_content.media],
   };
 
@@ -344,6 +372,29 @@ async function getMedia({ parent_id, file_name }) {
 // Will be done automatically in the background.
 // Unreferenced images and media will be deleted
 async function deleteMedia({ parent_id, file_name }) {}
+
+async function getTags({ order = "count" } = {}) {
+  if (order == "count") {
+    return await prisma.tag.findMany({
+      include: { _count: { select: { posts: true } } },
+      where: {
+        posts: {
+          some: {},
+        },
+      },
+      take: 15,
+      orderBy: {
+        posts: {
+          _count: "desc",
+        },
+      },
+    });
+  }
+}
+
+// TODO:
+// Will be done automatically in the background
+async function deleteTag({ tag_id }) {}
 
 // async function deleteImage(image, requester_id) {
 //   const user = await getUser({ id: requester_id });
@@ -540,4 +591,4 @@ const _r = (s, m) => {
   return { success: s, message: m };
 };
 
-module.exports = { settings, newUser, getUser, editUser, getPost, newPost, editPost, getBiography, updateBiography, uploadMedia, deleteBlog, postSetting, getSetting };
+module.exports = { settings, newUser, getUser, editUser, getPost, newPost, editPost, getBiography, updateBiography, uploadMedia, deleteBlog, getTags, postSetting, getSetting };
