@@ -2,7 +2,7 @@ const rich_text_editors = qsa(".rich-text-editor");
 let media = [];
 
 function textareaAction(textarea, insert, cursor_position, dual_side = false) {
-  // textarea = textarea.querySelector("textarea");
+  textarea = textarea.querySelector("textarea");
   const selectionStart = textarea.selectionStart;
   const selectionEnd = textarea.selectionEnd;
 
