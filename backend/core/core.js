@@ -80,7 +80,7 @@ async function newUser({ username, password, role } = {}) {
   // Master user was created; server initialized
   editSetting({ name: "SETUP_COMPLETE", value: true });
 }
-async function getUser({ user_id, username }) {
+async function getUser({ user_id, username, include_password = false }) {
   if (!username && !user_id) return _r(false, "Either a user_id or username is needed.");
 
   let user;
@@ -89,7 +89,11 @@ async function getUser({ user_id, username }) {
   else if (username) user = await prisma.user.findUnique({ where: { username: username } });
 
   if (!user) return _r(false, "No matching user");
-  else return { success: true, data: user };
+
+  // Delete the password from responses
+  if (!include_password) delete user.password;
+
+  return { success: true, data: user };
 }
 async function editUser({ requester_id, user_id, user_content }) {
   let user = await getUser({ user_id: user_id });
@@ -120,11 +124,15 @@ async function deleteUser({ user_id }) {
 
 // Posts
 async function newPost({ requester_id }) {
-  //   const user = await getUser({ id: requester_id });
-  const post = await prisma.post.create({ data: { owner: { connect: { id: requester_id } } } });
-
   // TODO: Validate request (Does user have perms?)
   // TODO: Does server allow new posts?
+
+  // Find if user already has a draft
+  let existing_post = await prisma.post.findFirst({ where: { owner: { id: requester_id }, visibility: "DRAFT" } });
+  if (existing_post) return existing_post.id;
+
+  const post = await prisma.post.create({ data: { owner: { connect: { id: requester_id } } } });
+
   return post.id;
 }
 async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {}, { search, search_title, search_content, search_tags } = {}, { limit = 10, page = 0, pagination = true } = {}) {

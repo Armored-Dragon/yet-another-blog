@@ -30,7 +30,7 @@ model Post {
   description String?
   content     String?
   media       String[]
-  visibility  PostStatus @default(UNLISTED)
+  visibility  PostStatus @default(DRAFT)
   owner       User?      @relation(fields: [ownerid], references: [id], onDelete: Cascade)
   ownerid     String?
 
@@ -81,6 +81,7 @@ enum Role {
 }
 
 enum PostStatus {
+  DRAFT
   PRIVATE
   UNLISTED
   PUBLISHED

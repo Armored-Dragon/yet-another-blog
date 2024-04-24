@@ -24,7 +24,7 @@ async function postLogin(req, res) {
   const { username, password } = req.body; // Get the username and password from the request body
 
   // Get the user by username
-  const existing_user = await core.getUser({ username: username });
+  const existing_user = await core.getUser({ username: username, include_password: true });
   if (!existing_user.success) return res.json({ success: false, message: existing_user.message });
 
   // Check the password
