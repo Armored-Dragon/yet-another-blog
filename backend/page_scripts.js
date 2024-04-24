@@ -9,7 +9,6 @@ async function getDefaults(req) {
   let user;
   if (req.session.user) user = await core.getUser({ user_id: req.session.user.id });
   if (user?.success) user = user.data;
-  console.log(user);
   return { logged_in_user: user, website_name: core.settings.WEBSITE_NAME || "Yet-Another-Blog", settings: core.settings };
 }
 async function index(request, response) {

@@ -203,6 +203,40 @@ body {
   box-sizing: border-box;
 }
 
+.info .info-blip.visibility-flag {
+  margin-left: auto;
+  font-size: 0.9rem;
+  display: flex;
+  padding: 0 0.5rem;
+  border-radius: 5px;
+  border: 2px solid;
+}
+.info .info-blip.visibility-flag span {
+  margin: auto;
+  color: black;
+}
+.info .visibility-flag.published {
+  border-color: #21b525;
+  background-color: #a0ffa0;
+}
+.info .visibility-flag.unlisted {
+  border-color: #bec10f;
+  background-color: #e8ffa0;
+}
+.info .visibility-flag.private {
+  border-color: #c10f0f;
+  background-color: #ffd7d7;
+}
+.info .visibility-flag.draft {
+  border-color: black;
+  background-color: rgba(0, 0, 0, 0.0588235294);
+}
+.info .visibility-flag.scheduled {
+  border-color: #0f77c1;
+  background-color: #d7e9ff;
+  margin-left: inherit;
+}
+
 @media screen and (max-width: 1280px) {
   .page-center {
     width: 95%;
