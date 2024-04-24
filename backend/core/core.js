@@ -330,8 +330,8 @@ async function updateBiography({ requester_id, author_id, biography_content }) {
 }
 // TODO: Replace
 async function deleteBlog(blog_id, requester_id) {
-  const user = await getUser({ id: requester_id });
-  const post = await getBlog({ id: blog_id });
+  const user = await getUser({ user_id: requester_id });
+  const post = await getPost({ post_id: blog_id });
 
   if (!post.success) return { success: false, message: post.message || "Post does not exist" };
 

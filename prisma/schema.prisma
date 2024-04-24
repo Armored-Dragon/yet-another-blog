@@ -38,7 +38,7 @@ model Post {
   tags Tag[]
 
   // Dates
-  publish_date DateTime?
+  publish_date DateTime? @default(now())
   created_date DateTime  @default(now())
 }
 
