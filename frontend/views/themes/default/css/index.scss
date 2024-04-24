@@ -171,6 +171,21 @@
 
 .page {
   display: flex;
+  flex-direction: column;
+}
+.horizontal-button-container {
+  background-color: white;
+  // min-height: 100px;
+  box-shadow: #0000001c 0 0px 5px;
+  margin-top: 2rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  flex-direction: column;
+  border-radius: 5px;
+
+  button {
+    height: 2rem;
+  }
 }
 .search {
   margin-top: 2rem;

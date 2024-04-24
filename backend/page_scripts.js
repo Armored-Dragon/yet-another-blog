@@ -13,7 +13,7 @@ async function index(request, response) {
   // const is_setup_complete = core.settings["SETUP_COMPLETE"];
   // if (!is_setup_complete) return response.redirect("/register");
 
-  const blog_list = await core.getPost({ requester_id: request.session.user?.id, page: request.query.page || 0 });
+  const blog_list = await core.getPost({ requester_id: request.session.user?.id }, {}, { page: request.query.page || 0 });
   const tags = await core.getTags();
 
   blog_list.data.forEach((post) => {

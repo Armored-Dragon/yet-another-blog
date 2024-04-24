@@ -10,6 +10,13 @@
     <%- include("partials/header.ejs") %>
 
     <div class="page">
+      <%if(logged_in_user) {%>
+      <div class="page-center">
+        <div class="horizontal-button-container">
+          <button onclick="window.location = '/post/new'" class="button"><span>New Post</span></button>
+        </div>
+      </div>
+      <%}%>
       <div class="page-center">
         <div class="post-list-container">
           <div class="post-list">

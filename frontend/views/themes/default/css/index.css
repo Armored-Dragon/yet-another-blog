@@ -154,6 +154,20 @@
 
 .page {
   display: flex;
+  flex-direction: column;
+}
+
+.horizontal-button-container {
+  background-color: white;
+  box-shadow: rgba(0, 0, 0, 0.1098039216) 0 0px 5px;
+  margin-top: 2rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  flex-direction: column;
+  border-radius: 5px;
+}
+.horizontal-button-container button {
+  height: 2rem;
 }
 
 .search {

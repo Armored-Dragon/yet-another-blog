@@ -4,7 +4,7 @@
     <a href="<%= loaded_page %>?page=<%= Number(current_page) - 1 %>" class="left button"><span>< Previous</span></a>
   </a>
   <% } else {%>
-  <a href="#" class="left button disabled"><span>< Previous</span></a>
+  <button href="#" class="left button disabled"><span>< Previous</span></button>
   <%}%>
   <!--  -->
   <div class="pages">
@@ -18,6 +18,6 @@
   <% if(pagination.includes(Number(current_page) + 1)) {%>
   <a href="<%= loaded_page %>?page=<%= Number(current_page) + 1 %>" class="right button"><span>Next ></span></a>
   <% } else {%>
-  <a href="#" class="right button disabled"><span>Next ></span></a>
+  <button class="right button disabled"><span>Next ></span></button>
   <%}%>
 </div>
