@@ -36,7 +36,7 @@ async function postLogin(req, res) {
   res.json({ success: true });
 }
 async function postSetting(request, response) {
-  const user = await core.getUser({ id: request.session.user.id });
+  const user = await core.getUser({ user_id: request.session.user.id });
 
   if (!user.success) return response.json({ success: false, message: user.message });
   if (user.data.role !== "ADMIN") return response.json({ success: false, message: "User is not permitted" });
@@ -52,22 +52,6 @@ async function deleteImage(req, res) {
   // TODO: Permissions for deleting image
   return res.json(await core.deleteImage(req.body, req.session.user.id));
 }
-async function postBlog(req, res) {
-  // Get user
-  const user = await core.getUser({ id: req.session.user.id });
-  if (!user.success) return user;
-
-  // TODO: Permissions for uploading posts
-  // Can user upload?
-  // const permissions = await permissions.postBlog(user);
-
-  // TODO: Validation for uploading posts
-  // Validate blog info
-  const valid = await validate.postBlog(req.body);
-
-  // Upload blog post
-  return res.json(await core.postBlog(valid.data, req.session.user.id));
-}
 async function deleteBlog(req, res) {
   // TODO: Permissions for deleting blog
   return res.json(await core.deleteBlog(req.body.id, req.session.user.id));
@@ -79,6 +63,7 @@ async function patchBlog(req, res) {
 
   // Validate blog info
   let valid = await validate.postBlog(req.body);
+
   if (!valid.success) return { success: false, message: valid.message || "Post failed validation" };
   valid = valid.data;
 
@@ -93,4 +78,4 @@ async function patchUser(request, response) {
   return response.json(await core.editUser({ requester_id: request.session.user.id, user_id: request.body.id, user_content: request.body }));
 }
 
-module.exports = { postRegister, patchBiography, postLogin, postSetting, postImage, deleteImage, postBlog, deleteBlog, patchBlog, patchUser };
+module.exports = { postRegister, patchBiography, postLogin, postSetting, postImage, deleteImage, deleteBlog, patchBlog, patchUser };

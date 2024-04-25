@@ -31,7 +31,6 @@ app.use(
 app.post("/login", checkNotAuthenticated, internal.postLogin);
 app.post("/register", checkNotAuthenticated, internal.postRegister);
 app.post("/setting", checkAuthenticated, internal.postSetting);
-app.post("/api/web/post", checkAuthenticated, internal.postBlog);
 app.post("/api/web/image", checkAuthenticated, internal.postImage);
 app.delete("/api/web/post/image", checkAuthenticated, internal.deleteImage);
 app.delete("/api/web/post", checkAuthenticated, internal.deleteBlog);
