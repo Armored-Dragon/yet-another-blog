@@ -46,7 +46,7 @@ async function postSetting(request, response) {
 async function postImage(request, response) {
   // TODO: Permissions for uploading images
   // TODO: Verification for image uploading
-  return response.json(await core.uploadMedia({ parent_id: request.body.post_id, file_buffer: request.body.buffer }));
+  return response.json(await core.uploadMedia({ parent_id: request.body.post_id, parent_type: request.body.parent_type, file_buffer: request.body.buffer, content_type: request.body.content_type }));
 }
 async function deleteImage(req, res) {
   // TODO: Permissions for deleting image
@@ -54,7 +54,7 @@ async function deleteImage(req, res) {
 }
 async function deleteBlog(req, res) {
   // TODO: Permissions for deleting blog
-  return res.json(await core.deleteBlog(req.body.id, req.session.user.id));
+  return res.json(await core.deletePost({ post_id: req.body.id, requester_id: req.session.user.id }));
 }
 async function patchBlog(req, res) {
   // FIXME: validate does not return post id

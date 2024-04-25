@@ -48,9 +48,12 @@ rich_text_editors.forEach((editor) => {
         data_blob: new Blob([await files[i].arrayBuffer()]),
         content_type: files[i].type,
       };
+
       let form_data = {
         buffer: await _readFile(image_object.data_blob),
+        content_type: image_object.content_type,
         post_id: window.location.href.split("/")[4],
+        parent_type: "posts",
       };
 
       const image_uploading_request = await request("/api/web/image", "POST", form_data);

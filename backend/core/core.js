@@ -276,9 +276,30 @@ async function editPost({ requester_id, post_id, post_content }) {
   // Save the updated post to the database
   await prisma.post.update({ where: { id: post.id }, data: post_formatted });
 
+  // Prune the post to save on storage
+  await pruneMedia({ parent_id: post_id, parent_type: "posts" });
+
   return _r(true);
 }
-async function deletePost({ requester_id, post_id }) {}
+async function deletePost({ requester_id, post_id }) {
+  let user = await getUser({ user_id: requester_id });
+  let post = await getPost({ post_id: post_id });
+
+  if (!user.success) return { success: false, message: user.message || "User does not exist" };
+  user = user.data;
+
+  if (!post.success) return { success: false, message: post.message || "Post does not exist" };
+  post = post.data;
+
+  let can_delete = post.owner.id === user.id || user.role === "ADMIN";
+
+  if (!can_delete) return { success: false, message: "Action not permitted" };
+
+  await prisma.post.delete({ where: { id: post.id } });
+  _deleteS3Directory(post.id, "post");
+
+  return { success: true };
+}
 // User Profiles
 async function getBiography({ requester_id, author_id }) {
   if (!author_id) return _r(false, "No Author specified.");
@@ -328,30 +349,10 @@ async function updateBiography({ requester_id, author_id, biography_content }) {
 
   return _r(true);
 }
-// TODO: Replace
-async function deleteBlog(blog_id, requester_id) {
-  const user = await getUser({ user_id: requester_id });
-  const post = await getPost({ post_id: blog_id });
-
-  if (!post.success) return { success: false, message: post.message || "Post does not exist" };
-
-  let can_delete = post.data.owner.id === user.data.id || user.data.role === "ADMIN";
-
-  if (can_delete) {
-    await prisma.post.delete({ where: { id: post.data.id } });
-    _deleteS3Directory(post.data.id, "blog");
-    return { success: true };
-  }
-
-  return { success: false, message: "Action not permitted" };
-}
-async function uploadMedia({ parent_id, file_buffer, file_extension }) {
+async function uploadMedia({ parent_id, parent_type, file_buffer, content_type }) {
   if (!use_s3_storage) return null;
   const content_name = crypto.randomUUID();
   let maximum_image_resolution = { width: 1920, height: 1080 };
-
-  // const image_extensions = ["png", "webp", "jpg", "jpeg"];
-  // const video_extensions = ["mp4", "webm", "mkv", "avi"];
 
   // Images
   const compressed_image = await sharp(Buffer.from(file_buffer.split(",")[1], "base64"), { animated: true })
@@ -359,27 +360,70 @@ async function uploadMedia({ parent_id, file_buffer, file_extension }) {
     .webp({ quality: 90, animated: true })
     .toBuffer();
 
+  let extension;
+  let s3_content_type;
+
+  if (content_type.includes("image/")) {
+    extension = ".webp";
+    s3_content_type = "image/webp";
+  }
+
   const params = {
     Bucket: process.env.S3_BUCKET_NAME,
-    Key: `${process.env.ENVIRONMENT}/posts/${parent_id}/${content_name}.webp`,
+    Key: `${process.env.ENVIRONMENT}/${parent_type}/${parent_id}/${content_name}${extension}`,
     Body: compressed_image,
-    ContentType: "image/webp",
+    ContentType: s3_content_type,
   };
 
   const command = new PutObjectCommand(params);
   await s3.send(command);
 
-  return content_name;
+  return content_name + extension;
 }
-async function getMedia({ parent_id, file_name }) {
+async function getMedia({ parent_id, parent_type, file_name }) {
   if (!use_s3_storage) return null;
-  const params = { Bucket: process.env.S3_BUCKET_NAME, Key: `${process.env.ENVIRONMENT}/posts/${parent_id}/${file_name}.webp` };
+  const params = { Bucket: process.env.S3_BUCKET_NAME, Key: `${process.env.ENVIRONMENT}/${parent_type}/${parent_id}/${file_name}` };
   return await getSignedUrl(s3, new GetObjectCommand(params), { expiresIn: 3600 });
 }
-// TODO:
-// Will be done automatically in the background.
-// Unreferenced images and media will be deleted
-async function deleteMedia({ parent_id, file_name }) {}
+
+async function deleteMedia({ parent_id, parent_type, file_name }) {
+  const request_params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: `${process.env.ENVIRONMENT}/${parent_type}/${parent_id}/${file_name}`,
+  };
+
+  const command = new DeleteObjectCommand(request_params);
+  await s3.send(command);
+
+  return { success: true };
+}
+
+// This cleans up all unused and unreferenced media files.
+// NOTE: Only made for posts, as that is all that there is right now
+async function pruneMedia({ parent_id, parent_type }) {
+  let post = await getPost({ post_id: parent_id });
+
+  if (!post.success) return { success: false, message: post.message || "Post does not exist" };
+  post = post.data;
+
+  // const total_number_of_media = post.raw_media.length;
+
+  for (let media_index = 0; post.raw_media.length > media_index; media_index++) {
+    if (!post.raw_content.includes(post.raw_media[media_index])) {
+      // Delete the media off of the S3 server
+      let delete_request = await deleteMedia({ parent_id: parent_id, parent_type: parent_type, file_name: post.raw_media[media_index] });
+      if (!delete_request.success) continue;
+
+      // Remove from the list in the database
+      await post.raw_media.splice(media_index, 1);
+      // Save in the database
+      await prisma.post.update({ where: { id: parent_id }, data: { media: post.raw_media } });
+
+      // Delete was successful, move the index back to account for new array length
+      media_index--;
+    }
+  }
+}
 
 async function getTags({ order = "count" } = {}) {
   if (order == "count") {
@@ -404,32 +448,6 @@ async function getTags({ order = "count" } = {}) {
 // Will be done automatically in the background
 async function deleteTag({ tag_id }) {}
 
-// async function deleteImage(image, requester_id) {
-//   const user = await getUser({ id: requester_id });
-//   const post = await getBlog({ id: image.parent, raw: true });
-
-//   // Check if post exists
-//   if (!post) return { success: false, message: "Post does not exist" };
-
-//   // Check for permissions
-//   if (post.owner.id !== user.data.id || user.data.role !== "ADMIN") return { success: false, message: "User is not permitted" };
-
-//   let image_index = post.raw_images.indexOf(image.id);
-
-//   post.raw_images.splice(image_index, 1);
-
-//   await prisma.post.update({ where: { id: post.id }, data: { images: post.raw_images } });
-
-//   const request_params = {
-//     Bucket: process.env.S3_BUCKET_NAME,
-//     Key: `${process.env.ENVIRONMENT}/${image.parent_type}/${image.parent}/${image.id}.webp`,
-//   };
-
-//   const command = new DeleteObjectCommand(request_params);
-//   await s3.send(command);
-
-//   return { success: true };
-// }
 async function _deleteS3Directory(id, type) {
   // Erase database images from S3 server
   const folder_params = { Bucket: process.env.S3_BUCKET_NAME, Prefix: `${process.env.ENVIRONMENT}/${type}/${id}` };
@@ -467,7 +485,7 @@ async function _renderPost(post) {
 
   if (post.media) {
     for (i = 0; post.media.length > i; i++) {
-      post.media[i] = await getMedia({ parent_id: post.id, file_name: post.media[i] });
+      post.media[i] = await getMedia({ parent_id: post.id, parent_type: "posts", file_name: post.media[i] });
     }
   }
 
@@ -599,4 +617,4 @@ const _r = (s, m) => {
   return { success: s, message: m };
 };
 
-module.exports = { settings, newUser, getUser, editUser, getPost, newPost, editPost, getBiography, updateBiography, uploadMedia, deleteBlog, getTags, postSetting, getSetting };
+module.exports = { settings, newUser, getUser, editUser, getPost, newPost, editPost, deletePost, getBiography, updateBiography, uploadMedia, getTags, postSetting, getSetting };
