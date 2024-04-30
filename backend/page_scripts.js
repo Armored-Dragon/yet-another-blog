@@ -2,8 +2,10 @@ const external = require("./core/external_api");
 const core = require("./core/core");
 
 function _getThemePage(page_name) {
-  return `themes/${core.settings.theme}/ejs/${page_name}.ejs`;
+  let manifest = require(`../frontend/views/themes/${core.settings.theme}/manifest.json`);
+  return `themes/${core.settings.theme}/${manifest.pages[page_name]}`;
 }
+
 async function getDefaults(req) {
   // TODO: Fix reference to website_name
   let user;
