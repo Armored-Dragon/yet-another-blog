@@ -46,7 +46,7 @@ async function postBlog(blog_object) {
     visibility: blog_object.visibility,
     publish_date: publish_date,
     tags: valid_tag_array,
-    images: blog_object.images,
+    media: blog_object.media,
     thumbnail: blog_object.thumbnail,
   };
 

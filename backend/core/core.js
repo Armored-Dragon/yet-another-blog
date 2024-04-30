@@ -4,6 +4,7 @@ const sharp = require("sharp");
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsCommand, DeleteObjectsCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 let s3;
+const crypto = require("crypto");
 const md = require("markdown-it")()
   .use(require("markdown-it-underline"))
   .use(require("markdown-it-footnote"))
@@ -21,23 +22,19 @@ let settings = {
   HIDE_LOGIN: false,
   BLOG_UPLOADING: false,
 
-  CD_RSS: false,
-  CD_AP: false,
+  CD_RSS: true,
+  CD_JSON: true,
 
   WEBSITE_NAME: "",
   PLAUSIBLE_URL: "",
 
   USER_MINIMUM_PASSWORD_LENGTH: 7,
 
-  BLOG_MINIMUM_TITLE_LENGTH: 7,
-  BLOG_MINIMUM_DESCRIPTION_LENGTH: 7,
-  BLOG_MINIMUM_CONTENT_LENGTH: 7,
+  theme: "default",
 };
 let use_s3_storage = false;
-let groups = [];
 _initS3Storage();
 _getSettings();
-_getGroups();
 
 // Checks to see if S3 storage is set
 function _initS3Storage() {
@@ -60,23 +57,20 @@ function _initS3Storage() {
   }
 }
 
-async function registerUser(username, password, options) {
-  let user_database_entry;
-  let user_profile_database_entry;
+// Users
+async function newUser({ username, password, role } = {}) {
+  if (!username) return _r(false, "Username not specified");
+  if (!password) return _r(false, "Password not specified");
 
-  // Create the entry in the database
+  // Create the account
   try {
-    user_database_entry = await prisma.user.create({ data: { username: username, password: password, ...options } });
+    user_database_entry = await prisma.user.create({ data: { username: username, password: password, role: role } });
   } catch (e) {
-    let message;
-
-    if (e.code === "P2002") message = "Username already exists";
-    else message = "Unknown error";
-
+    let message = "Unknown error";
     return { success: false, message: message };
   }
 
-  // Create a user profile page
+  // Create the profile page and link
   try {
     user_profile_database_entry = await prisma.profilePage.create({ data: { owner: { connect: { id: user_database_entry.id } } } });
   } catch (e) {
@@ -84,27 +78,86 @@ async function registerUser(username, password, options) {
   }
 
   // Master user was created; server initialized
-  postSetting("SETUP_COMPLETE", true);
-
-  // User has been successfully created
-  return { success: true, message: `Successfully created ${username}` };
+  editSetting({ name: "SETUP_COMPLETE", value: true });
 }
+async function getUser({ user_id, username, include_password = false }) {
+  if (!username && !user_id) return _r(false, "Either a user_id or username is needed.");
+
+  let user;
+
+  if (user_id) user = await prisma.user.findUnique({ where: { id: user_id } });
+  else if (username) user = await prisma.user.findUnique({ where: { username: username } });
+
+  if (!user) return _r(false, "No matching user");
+
+  // Delete the password from responses
+  if (!include_password) delete user.password;
+
+  return { success: true, data: user };
+}
+async function editUser({ requester_id, user_id, user_content }) {
+  let user = await getUser({ user_id: user_id });
+  if (!user.success) return _r(false, "User not found");
+  user = user.data;
+
+  // TODO:
+  // If there was a role change, see if the acting user can make these changes
+
+  // TODO:
+  // If there was a password change,
+  // check to see if the user can make these changes
+  // Hash the password
+
+  // FIXME: Not secure. ASAP!
+  let formatted = {};
+  formatted[user_content.setting_name] = user_content.value;
+
+  await prisma.user.update({ where: { id: user.id }, data: formatted });
+  return _r(true);
+}
+async function deleteUser({ user_id }) {
+  if (!user_id) return _r(false, "User_id not specified.");
+
+  await prisma.user.delete({ where: { id: user_id } }); // TODO: Test
+  return _r(true, `User ${user_id} deleted`);
+}
+
 // Posts
-async function getBlog({ id, visibility = "PUBLISHED", owner_id, limit = 10, page = 0, search_title = false, search_content = false, search_tags = false, search }) {
-  // If we have an ID, we want a single post
-  if (id) {
-    // Get the post by the id
-    let post = await prisma.blogPost.findUnique({ where: { id: id }, include: { owner: true } });
-    if (!post) return { success: false, message: "Post does not exist" };
+async function newPost({ requester_id }) {
+  // TODO: Validate request (Does user have perms?)
+  // TODO: Does server allow new posts?
 
-    // Render the post
-    const rendered_post = await _renderPost(post, true);
+  // Find if user already has a draft
+  let existing_post = await prisma.post.findFirst({ where: { owner: { id: requester_id }, visibility: "DRAFT" } });
+  if (existing_post) return existing_post.id;
 
-    // Return the post with valid image urls
-    return { data: rendered_post, success: true };
+  const post = await prisma.post.create({ data: { owner: { connect: { id: requester_id } } } });
+
+  return post.id;
+}
+async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {}, { search, search_title, search_content, search_tags } = {}, { limit = 10, page = 0, pagination = true } = {}) {
+  // Get a single post
+  if (post_id) {
+    let post;
+    post = await prisma.post.findUnique({ where: { id: post_id }, include: { owner: true, tags: true } });
+    if (!post) return _r(false, "Post does not exist");
+    post = _stripPrivatePost(post);
+
+    // Tags
+    let post_tags = [];
+    post.raw_tags = [];
+    post.tags.forEach((tag) => {
+      post_tags.push(tag.name);
+      post.raw_tags.push();
+    });
+    post.tags = post_tags;
+
+    // Render post
+    return { success: true, data: await _renderPost(post) };
   }
+
   // Otherwise build WHERE_OBJECT using data we do have
-  let rendered_post_list = [];
+  let post_list = [];
   let where_object = {
     OR: [
       // Standard discovery: Public, and after the publish date
@@ -123,7 +176,7 @@ async function getBlog({ id, visibility = "PUBLISHED", owner_id, limit = 10, pag
 
       // User owns the post
       {
-        ownerid: owner_id,
+        ownerid: requester_id,
       },
     ],
 
@@ -133,193 +186,210 @@ async function getBlog({ id, visibility = "PUBLISHED", owner_id, limit = 10, pag
       },
     ],
   };
-
   // Build the "where_object" object
   if (search) {
-    if (search_tags) where_object["AND"][0]["OR"].push({ tags: { hasSome: [search?.toLowerCase()] } });
+    if (search_tags) where_object["AND"][0]["OR"].push({ tags: { some: { name: search?.toLowerCase() } } });
     if (search_title) where_object["AND"][0]["OR"].push({ title: { contains: search, mode: "insensitive" } });
     if (search_content) where_object["AND"][0]["OR"].push({ content: { contains: search, mode: "insensitive" } });
   }
-
   // Execute search
-  const blog_posts = await prisma.blogPost.findMany({
+  let posts = await prisma.post.findMany({
     where: where_object,
     take: limit,
     skip: Math.max(page, 0) * limit,
-    include: { owner: true },
+    include: { owner: true, tags: true },
     orderBy: [{ publish_date: "desc" }, { created_date: "desc" }],
   });
 
-  // Render each of the posts in the list
-  for (post of blog_posts) {
-    rendered_post_list.push(await _renderPost(post, true));
+  for (post of posts) {
+    post = _stripPrivatePost(post);
+    post = await _renderPost(post);
+    post_list.push(post);
+
+    let post_tags = [];
+    post.tags.forEach((tag) => post_tags.push(tag.name));
+    post.tags = post_tags;
   }
+
   // Calculate pagination
-  let pagination = await prisma.blogPost.count({
+  let post_count = await prisma.post.count({
     where: where_object,
   });
-  return { data: rendered_post_list, pagination: _getNavigationList(page, Math.ceil(pagination / limit)), success: true };
-}
-async function getAuthorPage({ author_id }) {
-  // Get the post by the id
 
-  let post = await prisma.profilePage.findUnique({ where: { ownerid: author_id }, include: { owner: true } });
-  if (!post) return { success: false, message: "Post does not exist" };
+  return { data: post_list, pagination: _getNavigationList(page, Math.ceil(post_count / limit)), success: true };
 
-  // Render the post
-  const rendered_post = await _renderPost(post, true);
+  function _getNavigationList(current_page, max_page) {
+    current_page = Number(current_page);
+    max_page = Number(max_page);
 
-  // Return the post with valid image urls
-  return { data: rendered_post, success: true };
-}
-async function getUser({ id, username } = {}) {
-  let user;
-  if (id) user = await prisma.user.findUnique({ where: { id: id } });
-  else if (username) user = await prisma.user.findUnique({ where: { username: username } });
-
-  if (!user) return { success: false, message: "No matching user" };
-  else return { success: true, data: user };
-}
-async function postBlog(blog_post, owner_id) {
-  const user = await getUser({ id: owner_id });
-  // Check if user has permissions to upload a blog post
-
-  if (user.data.role !== "ADMIN" && user.data.role !== "AUTHOR") return { success: false, message: "User is not permitted" };
-
-  // Create object without image data to store in the database
-  let blog_post_formatted = {
-    title: blog_post.title,
-    description: blog_post.description,
-    content: blog_post.content,
-    visibility: blog_post.visibility,
-    publish_date: blog_post.publish_date,
-    tags: blog_post.tags,
-  };
-
-  // Save to database
-  const database_blog = await prisma.blogPost.create({ data: { ...blog_post_formatted, owner: { connect: { id: owner_id } } } });
-
-  // Init image vars
-  let uploaded_images = [];
-  let uploaded_thumbnail = "DEFAULT";
-
-  // For Each image, upload to S3
-  if (blog_post.images) {
-    for (let i = 0; blog_post.images.length > i; i++) {
-      const image = blog_post.images[i];
-      const image_data = Buffer.from(image.data_blob.split(",")[1], "base64");
-      const name = await _uploadImage(database_blog.id, "blog", false, image_data, image.id);
-      if (name) uploaded_images.push(name);
-    }
+    const pageList = [current_page - 2, current_page - 1, current_page, current_page + 1, current_page + 2].filter((num) => num >= 0 && num < max_page);
+    return pageList.slice(0, 5);
   }
-
-  // Upload thumbnail to S3
-  if (blog_post.thumbnail) {
-    const image_data = Buffer.from(blog_post.thumbnail.data_blob.split(",")[1], "base64");
-    const name = await _uploadImage(database_blog.id, "blog", true, image_data, blog_post.thumbnail.id);
-    if (name) uploaded_thumbnail = name;
-  }
-
-  // Update the blog post to include references to our images
-  await prisma.blogPost.update({ where: { id: database_blog.id }, data: { images: uploaded_images, thumbnail: uploaded_thumbnail } });
-  return { success: true, blog_id: database_blog.id };
 }
-async function deleteBlog(blog_id, requester_id) {
-  const user = await getUser({ id: requester_id });
-  const post = await getBlog({ id: blog_id });
-
-  if (!post.success) return { success: false, message: post.message || "Post does not exist" };
-
-  let can_delete = post.data.owner.id === user.data.id || user.data.role === "ADMIN";
-
-  if (can_delete) {
-    await prisma.blogPost.delete({ where: { id: post.data.id } });
-    _deleteS3Directory(post.data.id, "blog");
-    return { success: true };
-  }
-
-  return { success: false, message: "Action not permitted" };
-}
-async function updateBlog(blog_post, requester_id) {
-  const user = await getUser({ id: requester_id });
-  const post = await getBlog({ id: blog_post.id, raw: true });
+async function editPost({ requester_id, post_id, post_content }) {
+  let user = await getUser({ user_id: requester_id });
+  let post = await getPost({ post_id: post_id });
   let publish_date = null;
 
-  delete blog_post.id;
+  if (!user.success) return _r(false, post.message || "User not found");
+  user = user.data;
+  if (!post.success) return _r(false, post.message || "Post not found");
+  post = post.data;
 
-  if (!post.success) return { success: false, message: post.message || "Post not found" };
-
-  let can_update = post.data.owner.id === user.data.id || user.data.role === "ADMIN";
-
-  if (!can_update) return { success: false, message: "User not permitted" };
+  // Check to see if the requester can update the post
+  // TODO: Permissions
+  let can_update = post.owner.id === user.id || user.role === "ADMIN";
 
   // FIXME: Unsure if this actually works
   // Check if we already have a formatted publish date
-  if (typeof blog_post.publish_date !== "object") {
-    const [year, month, day] = blog_post.date.split("-");
-    const [hour, minute] = blog_post.time.split(":");
+  if (typeof post.publish_date !== "object") {
+    const [year, month, day] = post.date.split("-");
+    const [hour, minute] = post.time.split(":");
     publish_date = new Date(year, month - 1, day, hour, minute);
   }
 
-  let blog_post_formatted = {
-    title: blog_post.title,
-    description: blog_post.description,
-    content: blog_post.content,
-    visibility: blog_post.unlisted ? "UNLISTED" : "PUBLISHED",
-    publish_date: publish_date || blog_post.publish_date,
-    tags: blog_post.tags,
-  };
+  // Handle tags ----
+  let database_tag_list = [];
+  const existing_tags = post.tags?.map((tag) => ({ name: tag })) || [];
 
-  await prisma.blogPost.update({ where: { id: post.data.id }, data: blog_post_formatted });
+  // Add new tags
+  for (let tag_index = 0; post_content.tags.length > tag_index; tag_index++) {
+    let tag = post_content.tags[tag_index];
 
-  let uploaded_images = [];
-  let uploaded_thumbnail = "DEFAULT";
+    // Check to see if tag exists, create if necessary,
+    let database_tag = await prisma.tag.upsert({ where: { name: tag }, update: {}, create: { name: tag } });
 
-  // For Each image, upload to S3
-  if (blog_post.images) {
-    for (let i = 0; blog_post.images.length > i; i++) {
-      const image = blog_post.images[i];
-      const image_data = Buffer.from(image.data_blob.split(",")[1], "base64");
-      const name = await _uploadImage(post.id, "blog", false, image_data, image.id);
-      if (name) uploaded_images.push(name);
-    }
+    database_tag_list.push(database_tag);
   }
 
-  let data_to_update = {
-    images: [...post.data.raw_images, ...uploaded_images],
+  // Rebuild the post to save
+  let post_formatted = {
+    title: post_content.title,
+    description: post_content.description,
+    content: post_content.content,
+    visibility: post_content.visibility || "PRIVATE",
+    publish_date: publish_date || post_content.publish_date,
+    tags: { disconnect: [...existing_tags], connect: [...database_tag_list] },
+    media: [...post.raw_media, ...post_content.media],
   };
 
-  if (blog_post.thumbnail) {
-    const image_data = Buffer.from(blog_post.thumbnail.data_blob.split(",")[1], "base64");
-    const name = await _uploadImage(post.data.id, "blog", true, image_data, blog_post.thumbnail.id);
-    if (name) uploaded_thumbnail = name;
+  // Save the updated post to the database
+  await prisma.post.update({ where: { id: post.id }, data: post_formatted });
 
-    data_to_update.thumbnail = uploaded_thumbnail;
-  }
+  // Prune the post to save on storage
+  await pruneMedia({ parent_id: post_id, parent_type: "posts" });
 
-  await prisma.blogPost.update({ where: { id: post.data.id }, data: data_to_update });
+  return _r(true);
+}
+async function deletePost({ requester_id, post_id }) {
+  let user = await getUser({ user_id: requester_id });
+  let post = await getPost({ post_id: post_id });
+
+  if (!user.success) return { success: false, message: user.message || "User does not exist" };
+  user = user.data;
+
+  if (!post.success) return { success: false, message: post.message || "Post does not exist" };
+  post = post.data;
+
+  let can_delete = post.owner.id === user.id || user.role === "ADMIN";
+
+  if (!can_delete) return { success: false, message: "Action not permitted" };
+
+  await prisma.post.delete({ where: { id: post.id } });
+  _deleteS3Directory(post.id, "post");
 
   return { success: true };
 }
-async function deleteImage(image, requester_id) {
-  const user = await getUser({ id: requester_id });
-  const post = await getBlog({ id: image.parent, raw: true });
+// User Profiles
+async function getBiography({ requester_id, author_id }) {
+  if (!author_id) return _r(false, "No Author specified.");
+  let post = await prisma.profilePage.findFirst({ where: { ownerid: author_id }, include: { owner: true } });
 
-  // Check if post exists
-  if (!post) return { success: false, message: "Post does not exist" };
+  // Check if it is private
+  // TODO
 
-  // Check for permissions
-  if (post.owner.id !== user.data.id || user.data.role !== "ADMIN") return { success: false, message: "User is not permitted" };
+  // HACK:
+  // When we render the post and reading from S3, we want the post id
+  // The problem is when a user views the biography page, the page shows the account id opposed to the "profile page" id.
+  // This causes a incorrect parent_id value and an incorrect key.
+  // Replace the "id" to the value it's expecting.
+  const original_post_id = post.id;
+  let rendering_formatted_post = {};
 
-  let image_index = post.raw_images.indexOf(image.id);
+  rendering_formatted_post = post;
+  rendering_formatted_post.id = author_id;
 
-  post.raw_images.splice(image_index, 1);
+  // Render
+  post = _stripPrivatePost(post);
+  post = await _renderPost(rendering_formatted_post);
 
-  await prisma.blogPost.update({ where: { id: post.id }, data: { images: post.raw_images } });
+  post.id = original_post_id;
 
+  return { success: true, data: post };
+}
+async function updateBiography({ requester_id, author_id, biography_content }) {
+  let user = await getUser({ user_id: requester_id });
+  let biography = await getBiography({ author_id: author_id });
+
+  if (!user.success) return _r(false, user.message || "Author not found");
+  user = user.data;
+
+  if (!biography.success) return _r(false, biography.message || "Post not found");
+  biography = biography.data;
+
+  let can_update = biography.owner.id === user.id || user.role === "ADMIN";
+  if (!can_update) return _r(false, "User not permitted");
+
+  let formatted = {
+    content: biography_content.content,
+    media: [...biography.raw_media, ...biography_content.media],
+  };
+
+  await prisma.profilePage.update({ where: { id: biography.id }, data: formatted });
+
+  return _r(true);
+}
+async function uploadMedia({ parent_id, parent_type, file_buffer, content_type }) {
+  if (!use_s3_storage) return null;
+  const content_name = crypto.randomUUID();
+  let maximum_image_resolution = { width: 1920, height: 1080 };
+
+  // Images
+  const compressed_image = await sharp(Buffer.from(file_buffer.split(",")[1], "base64"), { animated: true })
+    .resize({ ...maximum_image_resolution, withoutEnlargement: true, fit: "inside" })
+    .webp({ quality: 90, animated: true })
+    .toBuffer();
+
+  let extension;
+  let s3_content_type;
+
+  if (content_type.includes("image/")) {
+    extension = ".webp";
+    s3_content_type = "image/webp";
+  }
+
+  const params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: `${process.env.ENVIRONMENT}/${parent_type}/${parent_id}/${content_name}${extension}`,
+    Body: compressed_image,
+    ContentType: s3_content_type,
+  };
+
+  const command = new PutObjectCommand(params);
+  await s3.send(command);
+
+  return content_name + extension;
+}
+async function getMedia({ parent_id, parent_type, file_name }) {
+  if (!use_s3_storage) return null;
+  const params = { Bucket: process.env.S3_BUCKET_NAME, Key: `${process.env.ENVIRONMENT}/${parent_type}/${parent_id}/${file_name}` };
+  return await getSignedUrl(s3, new GetObjectCommand(params), { expiresIn: 3600 });
+}
+
+async function deleteMedia({ parent_id, parent_type, file_name }) {
   const request_params = {
     Bucket: process.env.S3_BUCKET_NAME,
-    Key: `${process.env.ENVIRONMENT}/${image.parent_type}/${image.parent}/${image.id}.webp`,
+    Key: `${process.env.ENVIRONMENT}/${parent_type}/${parent_id}/${file_name}`,
   };
 
   const command = new DeleteObjectCommand(request_params);
@@ -327,40 +397,58 @@ async function deleteImage(image, requester_id) {
 
   return { success: true };
 }
-async function _uploadImage(parent_id, parent_type, is_thumbnail, buffer, name) {
-  if (!use_s3_storage) return null;
-  let size = { width: 1920, height: 1080 };
-  if (is_thumbnail) size = { width: 300, height: 300 };
 
-  const compressed_image = await sharp(buffer, { animated: true })
-    .resize({ ...size, withoutEnlargement: true, fit: "inside" })
-    .webp({ quality: 90, animated: true })
-    .toBuffer();
+// This cleans up all unused and unreferenced media files.
+// NOTE: Only made for posts, as that is all that there is right now
+async function pruneMedia({ parent_id, parent_type }) {
+  let post = await getPost({ post_id: parent_id });
 
-  const params = {
-    Bucket: process.env.S3_BUCKET_NAME,
-    Key: `${process.env.ENVIRONMENT}/${parent_type}/${parent_id}/${name}.webp`,
-    Body: compressed_image,
-    ContentType: "image/webp",
-  };
+  if (!post.success) return { success: false, message: post.message || "Post does not exist" };
+  post = post.data;
 
-  const command = new PutObjectCommand(params);
-  await s3.send(command);
+  // const total_number_of_media = post.raw_media.length;
 
-  return name;
+  for (let media_index = 0; post.raw_media.length > media_index; media_index++) {
+    if (!post.raw_content.includes(post.raw_media[media_index])) {
+      // Delete the media off of the S3 server
+      let delete_request = await deleteMedia({ parent_id: parent_id, parent_type: parent_type, file_name: post.raw_media[media_index] });
+      if (!delete_request.success) continue;
+
+      // Remove from the list in the database
+      await post.raw_media.splice(media_index, 1);
+      // Save in the database
+      await prisma.post.update({ where: { id: parent_id }, data: { media: post.raw_media } });
+
+      // Delete was successful, move the index back to account for new array length
+      media_index--;
+    }
+  }
 }
-async function _getImage(parent_id, parent_type, name) {
-  if (!use_s3_storage) return null;
-  let params;
-  // Default image
-  if (name === "DEFAULT") params = { Bucket: process.env.S3_BUCKET_NAME, Key: `defaults/thumbnail.webp` };
-  // Named image
-  else params = { Bucket: process.env.S3_BUCKET_NAME, Key: `${process.env.ENVIRONMENT}/${parent_type}/${parent_id}/${name}.webp` };
 
-  return await getSignedUrl(s3, new GetObjectCommand(params), { expiresIn: 3600 });
+async function getTags({ order = "count" } = {}) {
+  if (order == "count") {
+    return await prisma.tag.findMany({
+      include: { _count: { select: { posts: true } } },
+      where: {
+        posts: {
+          some: {},
+        },
+      },
+      take: 15,
+      orderBy: {
+        posts: {
+          _count: "desc",
+        },
+      },
+    });
+  }
 }
+
+// TODO:
+// Will be done automatically in the background
+async function deleteTag({ tag_id }) {}
+
 async function _deleteS3Directory(id, type) {
-  // logger.verbose(`Deleting entire S3 image directory`);
   // Erase database images from S3 server
   const folder_params = { Bucket: process.env.S3_BUCKET_NAME, Prefix: `${process.env.ENVIRONMENT}/${type}/${id}` };
 
@@ -387,93 +475,82 @@ async function _deleteS3Directory(id, type) {
   // If there are more objects to delete (truncated result), recursively call the function again
   // if (listed_objects.IsTruncated) await emptyS3Directory(bucket, dir);
 }
-async function _renderPost(blog_post, raw, { post_type = "blog" } = {}) {
-  if (raw) {
-    // Had to do this, only God knows why.
-    blog_post.raw_images = [];
-    if (blog_post.images) blog_post.images.forEach((image) => blog_post.raw_images.push(image));
 
-    blog_post.raw_thumbnail = blog_post.thumbnail;
-    blog_post.raw_content = blog_post.content;
-  }
+async function _renderPost(post) {
+  post.raw_media = [];
+  post.raw_content = post.content;
 
-  if (blog_post.images) {
-    // Get the image urls for the post
-    for (i = 0; blog_post.images.length > i; i++) {
-      blog_post.images[i] = await _getImage(blog_post.id, post_type, blog_post.images[i]);
+  // For some reason Node does not like to set a variable and leave it.
+  post.media.forEach((media) => post.raw_media.push(media));
+
+  if (post.media) {
+    for (i = 0; post.media.length > i; i++) {
+      post.media[i] = await getMedia({ parent_id: post.id, parent_type: "posts", file_name: post.media[i] });
     }
   }
 
-  // get thumbnail URL
-  blog_post.thumbnail = await _getImage(blog_post.id, post_type, blog_post.thumbnail);
-
-  if (blog_post.content) {
+  if (post.content) {
     // Render the markdown contents of the post
-    blog_post.content = md.render(blog_post.content);
+    post.content = md.render(post.content);
 
     // Replace custom formatting with what we want
-    blog_post.content = _format_blog_content(blog_post.content, blog_post.images);
+    post.content = _formatBlogContent(post.content, post.media);
   }
+  return post;
 
-  return blog_post;
-}
-function _format_blog_content(content, images) {
-  // Replace Images
-  const image_regex = /{image:([^}]+)}/g;
+  function _formatBlogContent(content, media_list) {
+    // Replace Images
+    const image_regex = /{image:([^}]+)}/g;
 
-  // Replace Side-by-side
-  const side_by_side = /{sidebyside}(.*?){\/sidebyside}/gs;
+    // Replace Side-by-side
+    const side_by_side = /{sidebyside}(.*?){\/sidebyside}/gs;
 
-  // Replace video links
-  const video = /{video:([^}]+)}/g;
+    // Replace video links
+    const video = /{video:([^}]+)}/g;
 
-  content = content.replace(video, (match, inner_content) => {
-    return `<div class='video-embed'><iframe src="${_getVideoEmbed(inner_content)}" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
-  });
+    content = content.replace(video, (match, inner_content) => {
+      return `<div class='video-embed'><iframe src="${_getVideoEmbed(inner_content)}" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+    });
 
-  content = content.replace(image_regex, (match, image_name) => {
-    for (image of images) {
-      if (image.includes(image_name)) {
-        return `<div class='image-container'><img src='${image}'></div>`;
+    // Replace Images
+    content = content.replace(image_regex, (match, image_name) => {
+      for (media of media_list) {
+        if (media.includes(image_name)) {
+          return `<div class='image-container'><img src='${media}'></div>`;
+        }
+      }
+
+      // Unknown image (Image was probably deleted)
+      return "";
+    });
+
+    content = content.replace(side_by_side, (match, inner_content) => {
+      return `<div class='side-by-side'>${inner_content}</div>`;
+    });
+
+    // Finished formatting, return!
+    return content;
+
+    function _getVideoEmbed(video_url) {
+      // YouTube
+      if (video_url.includes("youtu.be")) {
+        return `https://youtube.com/embed/${video_url.split("/")[3]}`;
+      }
+      if (video_url.includes("youtube")) {
+        let video_id = video_url.split("/")[3];
+        video_id = video_id.split("watch?v=").pop();
+        return `https://youtube.com/embed/${video_id}`;
+      }
+
+      // Odysee
+      if (video_url.includes("://odysee.com")) {
+        let video_link = `https://${video_url.split("/")[2]}/$/embed/${video_url.split("/")[3]}/${video_url.split("/")[4]}`;
+        return video_link;
       }
     }
-
-    // Unknown image (Image was probably deleted)
-    return "";
-  });
-
-  content = content.replace(side_by_side, (match, inner_content) => {
-    return `<div class='side-by-side'>${inner_content}</div>`;
-  });
-
-  // Finished formatting, return!
-  return content;
-
-  function _getVideoEmbed(video_url) {
-    // YouTube
-    if (video_url.includes("youtu.be")) {
-      return `https://youtube.com/embed/${video_url.split("/")[3]}`;
-    }
-    if (video_url.includes("youtube")) {
-      let video_id = video_url.split("/")[3];
-      video_id = video_id.split("watch?v=").pop();
-      return `https://youtube.com/embed/${video_id}`;
-    }
-
-    // Odysee
-    if (video_url.includes("://odysee.com")) {
-      let video_link = `https://${video_url.split("/")[2]}/$/embed/${video_url.split("/")[3]}/${video_url.split("/")[4]}`;
-      return video_link;
-    }
   }
 }
-function _getNavigationList(current_page, max_page) {
-  current_page = Number(current_page);
-  max_page = Number(max_page);
 
-  const pageList = [current_page - 2, current_page - 1, current_page, current_page + 1, current_page + 2].filter((num) => num >= 0 && num < max_page);
-  return pageList.slice(0, 5);
-}
 async function _getSettings() {
   // Go though each object key in our settings to get the value if it exists
   Object.keys(settings).forEach(async (key) => {
@@ -491,7 +568,7 @@ async function _getSettings() {
     return (settings[key] = value);
   });
 }
-
+// TODO: Replace
 async function getSetting(key, { parse = true }) {
   if (!settings[key]) return null;
 
@@ -500,19 +577,44 @@ async function getSetting(key, { parse = true }) {
   }
   return settings[key];
 }
+// TODO: Replace
 async function postSetting(key, value) {
   try {
     if (!Object.keys(settings).includes(key)) return { success: false, message: "Setting not valid" };
 
     await prisma.setting.upsert({ where: { id: key }, update: { value: value }, create: { id: key, value: value } });
-    settings[key] = JSON.parse(value);
+    try {
+      settings[key] = JSON.parse(value);
+    } catch {
+      settings[key] = value;
+    }
 
     return { success: true };
   } catch (e) {
     return { success: false, message: e.message };
   }
 }
-async function _getGroups() {
-  const group_list = await prisma.group.findMany();
+// TODO: Replace
+async function editSetting({ name, value }) {
+  if (!Object.keys(settings).includes(name)) return _r(false, "Setting is not valid");
+
+  await prisma.setting.upsert({ where: { id: key }, update: { value: value }, create: { id: key, value: value } });
+  try {
+    settings[key] = JSON.parse(value);
+  } catch {
+    settings[key] = value;
+  }
+
+  return _r(true);
 }
-module.exports = { settings, registerUser, getUser, getAuthorPage, postBlog, updateBlog, getBlog, deleteBlog, deleteImage, postSetting, getSetting };
+
+function _stripPrivatePost(post) {
+  if (!post) return;
+  if (post.owner) delete post.owner.password;
+  return post;
+}
+const _r = (s, m) => {
+  return { success: s, message: m };
+};
+
+module.exports = { settings, newUser, getUser, editUser, getPost, newPost, editPost, deletePost, getBiography, updateBiography, uploadMedia, getTags, postSetting, getSetting };

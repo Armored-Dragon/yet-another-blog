@@ -1,0 +1,73 @@
+.page .page-center {
+  display: flex;
+  flex-direction: row;
+  min-height: 50px;
+  background-color: white;
+  box-shadow: rgba(0, 0, 0, 0.1098039216) 0 0px 5px;
+  margin-top: 2rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  width: 1080px;
+  max-width: 1080px;
+  border-radius: 5px;
+}
+.page .page-center .biography {
+  width: 66.6666666667%;
+  background-color: white;
+  min-height: 50px;
+  box-shadow: rgba(0, 0, 0, 0.1098039216) 0 0px 5px;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+.page .page-center .biography .image-container {
+  max-width: 100%;
+}
+.page .page-center .biography .image-container img {
+  max-width: 100%;
+}
+.page .page-center .about {
+  width: 33.3333333333%;
+  background-color: white;
+  min-height: 50px;
+  margin: 0 0 0 1rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  box-shadow: rgba(0, 0, 0, 0.1098039216) 0 0px 5px;
+  height: -moz-fit-content;
+  height: fit-content;
+}
+.page .page-center .about .profile-picture {
+  margin: auto auto 1.5rem auto;
+  display: flex;
+}
+.page .page-center .about .profile-picture img {
+  margin: auto;
+  max-height: 200px;
+  max-width: 200px;
+}
+.page .page-center .about .displayname {
+  font-size: 1.4rem;
+  text-align: center;
+}
+.page .page-center .about .stat {
+  color: gray;
+  font-size: 1rem;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+.page .page-center .about .sociallist {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 3rem;
+}
+.page .page-center .about .sociallist .link {
+  text-decoration: none;
+  color: black;
+  margin: auto;
+}
+
+.page .nobackground {
+  background-color: transparent;
+  box-shadow: none;
+  padding: 0;
+}

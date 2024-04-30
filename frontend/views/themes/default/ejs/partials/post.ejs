@@ -1,0 +1,20 @@
+<div class="post">
+  <a href="/post/<%= post.id %>" class="title"><%= post.title ? post.title : "Untitled Post" %></a>
+  <div class="authors">By <a href="/author/<%= post.owner.id %>"><%= post.owner.display_name || post.owner.username %></a></div>
+  <div class="description"><%= post.description %></div>
+  <div class="badges">
+    <div class="info">
+      <div class="info-blip icon publish-date"><%= post.publish_date ? post.publish_date.toLocaleString('en-US', { dateStyle:'medium'}) : "Unknown Publish Date" %></div>
+      <div class="info-blip icon reading-time">Null minute read</div>
+      <% if (logged_in_user) { %>
+      <!--  -->
+      <div class="info-blip visibility-flag <%= post.visibility.toLowerCase() %>"><span><%= post.visibility %></span></div>
+      <!--  -->
+      <% if (new Date(post.publish_date) > new Date() && post.visibility !== 'PRIVATE') {%>
+      <div class="info-blip visibility-flag scheduled"><span>Scheduled</span></div>
+      <% } %>
+      <!--  -->
+      <% } %>
+    </div>
+  </div>
+</div>

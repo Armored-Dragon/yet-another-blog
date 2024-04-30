@@ -18,13 +18,13 @@ async function postRegister(req, res) {
   const role = core.settings["SETUP_COMPLETE"] ? undefined : "ADMIN";
 
   const hashed_password = await bcrypt.hash(password, 10); // Hash the password for security :^)
-  res.json(await core.registerUser(username, hashed_password, { role: role }));
+  res.json(await core.newUser({ username: username, password: hashed_password, role: role }));
 }
 async function postLogin(req, res) {
   const { username, password } = req.body; // Get the username and password from the request body
 
   // Get the user by username
-  const existing_user = await core.getUser({ username: username });
+  const existing_user = await core.getUser({ username: username, include_password: true });
   if (!existing_user.success) return res.json({ success: false, message: existing_user.message });
 
   // Check the password
@@ -36,36 +36,25 @@ async function postLogin(req, res) {
   res.json({ success: true });
 }
 async function postSetting(request, response) {
-  const user = await core.getUser({ id: request.session.user.id });
+  const user = await core.getUser({ user_id: request.session.user.id });
 
   if (!user.success) return response.json({ success: false, message: user.message });
   if (user.data.role !== "ADMIN") return response.json({ success: false, message: "User is not permitted" });
 
   response.json(await core.postSetting(request.body.setting_name, request.body.value));
 }
+async function postImage(request, response) {
+  // TODO: Permissions for uploading images
+  // TODO: Verification for image uploading
+  return response.json(await core.uploadMedia({ parent_id: request.body.post_id, parent_type: request.body.parent_type, file_buffer: request.body.buffer, content_type: request.body.content_type }));
+}
 async function deleteImage(req, res) {
   // TODO: Permissions for deleting image
   return res.json(await core.deleteImage(req.body, req.session.user.id));
 }
-async function postBlog(req, res) {
-  // Get user
-  const user = await core.getUser({ id: req.session.user.id });
-  if (!user.success) return user;
-
-  // TODO: Permissions for uploading posts
-  // Can user upload?
-  // const permissions = await permissions.postBlog(user);
-
-  // TODO: Validation for uploading posts
-  // Validate blog info
-  const valid = await validate.postBlog(req.body);
-
-  // Upload blog post
-  return res.json(await core.postBlog(valid.data, req.session.user.id));
-}
 async function deleteBlog(req, res) {
   // TODO: Permissions for deleting blog
-  return res.json(await core.deleteBlog(req.body.id, req.session.user.id));
+  return res.json(await core.deletePost({ post_id: req.body.id, requester_id: req.session.user.id }));
 }
 async function patchBlog(req, res) {
   // FIXME: validate does not return post id
@@ -73,10 +62,20 @@ async function patchBlog(req, res) {
   // User is admin, or user is author
 
   // Validate blog info
-  const valid = await validate.postBlog(req.body);
+  let valid = await validate.postBlog(req.body);
+
+  if (!valid.success) return { success: false, message: valid.message || "Post failed validation" };
+  valid = valid.data;
 
   // TODO: Permissions for updating blog
-  return res.json(await core.updateBlog({ ...valid.data, id: req.body.id }, req.session.user.id));
+  return res.json(await core.editPost({ requester_id: req.session.user.id, post_id: req.body.id, post_content: valid }));
+}
+async function patchBiography(request, response) {
+  // TODO: Validate
+  return response.json(await core.updateBiography({ requester_id: request.session.user.id, author_id: request.body.id, biography_content: request.body }));
+}
+async function patchUser(request, response) {
+  return response.json(await core.editUser({ requester_id: request.session.user.id, user_id: request.body.id, user_content: request.body }));
 }
 
-module.exports = { postRegister, postLogin, postSetting, deleteImage, postBlog, deleteBlog, patchBlog };
+module.exports = { postRegister, patchBiography, postLogin, postSetting, postImage, deleteImage, deleteBlog, patchBlog, patchUser };

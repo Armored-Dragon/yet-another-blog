@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="/css/index.css" />
+    <link rel="stylesheet" type="text/css" href="/css/generic.css" />
+    <script src="/js/generic.js"></script>
+    <title>Yet-Another-Blog</title>
+  </head>
+  <body>
+    <%- include("partials/header.ejs") %>
+
+    <div class="page">
+      <div class="page-center">
+        <div class="search">
+          <div class="action">
+            <input type="text" placeholder="Search..." />
+            <button class="button" onclick="search()"><span>Search</span></button>
+          </div>
+        </div>
+        <div class="post-list-container">
+          <div class="post-list full">
+            <% for(post of blog_list) { %>
+            <!--  -->
+            <%- include("partials/post.ejs", {post:post}) %>
+            <!--  -->
+            <% } %>
+          </div>
+        </div>
+        <%- include("partials/pagination.ejs") %>
+      </div>
+    </div>
+
+    <%- include("partials/footer.ejs") %>
+  </body>
+  <script defer src="/js/postSearch.js"></script>
+</html>

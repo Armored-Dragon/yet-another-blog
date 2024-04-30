@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="/css/newPost.css" />
+    <link rel="stylesheet" type="text/css" href="/css/generic.css" />
+    <script src="/js/generic.js"></script>
+    <title>Yet-Another-Blog</title>
+  </head>
+  <body>
+    <%- include("partials/header.ejs") %>
+    <div class="page">
+      <div class="page-center">
+        <div class="page-title">New Post</div>
+        <div class="info-container">
+          <div class="title">Title</div>
+          <input id="post-title" value="<%= existing_blog.title %>" type="text" />
+        </div>
+        <div class="info-container">
+          <div class="title">Description</div>
+          <textarea id="post-description"><%= existing_blog.description %></textarea>
+        </div>
+        <div class="info-container">
+          <div class="title">Tags</div>
+          <input id="post-tags" type="text" value="<%= existing_blog.tags %>" />
+        </div>
+        <div class="separator"></div>
+        <div class="info-container">
+          <div class="title">Content</div>
+          <%- include("partials/richTextEditor.ejs", {text_selector: 'post-content', prefill: existing_blog.raw_content}) %>
+        </div>
+        <div class="info-container">
+          <div class="title">Post Date</div>
+          <div class="side-by-side-info">
+            <input id="date" type="date" value="<%= existing_blog.publish_date %>" />
+            <input id="time" type="time" value="<%= existing_blog.publish_time %>" />
+          </div>
+        </div>
+        <div class="info-container">
+          <div class="side-by-side-info">
+            <button onclick="publish('PRIVATE')" class="button caution">Private</button>
+            <button onclick="publish('UNLISTED')" class="button caution">Unlisted</button>
+            <button onclick="publish('PUBLISHED')" class="button">Publish</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <%- include("partials/footer.ejs") %>
+  </body>
+</html>
+<script defer src="/js/newPost.js"></script>

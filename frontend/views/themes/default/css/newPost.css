@@ -1,0 +1,50 @@
+.page .page-center {
+  background-color: white;
+  min-height: 100px;
+  box-shadow: rgba(0, 0, 0, 0.1098039216) 0 0px 5px;
+  margin-top: 2rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  width: 1080px;
+  max-width: 1080px;
+  flex-direction: column;
+  border-radius: 5px;
+}
+.page .page-center .page-title {
+  text-align: center;
+  font-size: 1.5rem;
+}
+.page .page-center .info-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+.page .page-center .info-container input {
+  width: 100%;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  background-color: rgb(245, 245, 245);
+  border: 1px solid gray;
+  border-radius: 5px;
+}
+.page .page-center .info-container textarea {
+  padding: 0.5rem;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 100%;
+  min-height: 5rem;
+  background-color: rgb(245, 245, 245);
+  border: 1px solid gray;
+}
+.page .page-center .side-by-side-info {
+  display: flex;
+  flex-direction: row;
+}
+.page .page-center .side-by-side-info input {
+  margin: 0 0.25rem;
+}
+.page .page-center .side-by-side-info .button {
+  padding: 0.5rem;
+  box-sizing: border-box;
+  margin: auto;
+}

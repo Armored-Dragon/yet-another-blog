@@ -1,0 +1,195 @@
+.post-list-container {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: row;
+}
+.post-list-container .post-list {
+  width: 66.6666666667%;
+  min-height: 200px;
+}
+.post-list-container .post-list .post {
+  width: 100%;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: rgba(0, 0, 0, 0.1098039216) 0 0px 5px;
+  min-height: 200px;
+  padding: 0.5rem 1rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+.post-list-container .post-list .post .title {
+  font-size: 2rem;
+  font-weight: 550;
+  margin-bottom: 0.5rem;
+  text-decoration: none;
+  color: black;
+}
+.post-list-container .post-list .post .authors {
+  margin-bottom: 1.5rem;
+}
+.post-list-container .post-list .post .authors a {
+  color: black;
+}
+.post-list-container .post-list .post .description {
+  margin-bottom: 1rem;
+}
+.post-list-container .post-list .post .badges {
+  margin-top: auto;
+  color: #414141;
+}
+.post-list-container .post-list .post .badges .tags {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 0.5rem;
+}
+.post-list-container .post-list .post .badges .info {
+  display: flex;
+  flex-direction: row;
+}
+.post-list-container .post-list .post .badges .info .info-blip {
+  margin-right: 1rem;
+}
+.post-list-container .post-list .post .badges .info .publish-date::before {
+  background-image: url("../img/calendar.svg"); /* Set the background image */
+}
+.post-list-container .post-list .post .badges .info .reading-time::before {
+  background-image: url("../img/hourglass.svg"); /* Set the background image */
+}
+.post-list-container .post-list .post .badges .info .word-count::before {
+  background-image: url("https://www.svgrepo.com/show/2460/cherry.svg"); /* Set the background image */
+}
+.post-list-container .post-list.full {
+  width: 100%;
+}
+.post-list-container .tag-list {
+  width: 33.3333333333%;
+  max-width: 33.3333333333%;
+  min-height: 200px;
+  padding: 0 2rem;
+  box-sizing: border-box;
+}
+.post-list-container .tag-list .tag-header {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+.post-list-container .tag-list .list {
+  display: flex;
+  flex-direction: row;
+  overflow-wrap: break-word;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.post-list-container .tag-list .list .tag {
+  height: -moz-fit-content;
+  height: fit-content;
+  background-color: lightgray;
+  margin-bottom: 0.5rem;
+  margin-right: 0.5rem;
+}
+.post-list-container .tag-list .list .tag::before {
+  display: none;
+}
+
+.tag {
+  width: -moz-fit-content;
+  width: fit-content;
+  margin-right: 0.1rem;
+  padding: 0.2rem 0.3rem;
+  box-sizing: border-box;
+  border-radius: 4px;
+  color: black;
+  text-decoration: none;
+}
+
+.tag::before {
+  background-image: url("../img/tag.svg"); /* Set the background image */
+}
+
+.pagination {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  height: 40px;
+}
+.pagination .left {
+  margin-right: 1rem;
+}
+.pagination .pages {
+  height: 100%;
+  margin: auto;
+  display: flex;
+  flex-direction: row;
+}
+.pagination .pages a {
+  display: flex;
+  height: 100%;
+  aspect-ratio: 1/1;
+  color: black;
+  text-decoration: none;
+}
+.pagination .pages a span {
+  margin: auto;
+}
+.pagination .pages a.active {
+  background-color: lightskyblue;
+  border-radius: 5px;
+}
+.pagination .right {
+  margin-left: 1rem;
+}
+.pagination .left,
+.pagination .right {
+  padding: 0.75rem 1rem;
+  box-sizing: border-box;
+  text-decoration: none;
+  display: flex;
+}
+.pagination .left span,
+.pagination .right span {
+  margin: auto;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+}
+
+.horizontal-button-container {
+  background-color: white;
+  box-shadow: rgba(0, 0, 0, 0.1098039216) 0 0px 5px;
+  margin-top: 2rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  flex-direction: column;
+  border-radius: 5px;
+}
+.horizontal-button-container button {
+  height: 2rem;
+}
+
+.search {
+  margin-top: 2rem;
+  width: 100%;
+  height: 3rem;
+  box-sizing: border-box;
+}
+.search .title {
+  font-size: 1.2rem;
+  font-style: italic;
+}
+.search .action {
+  display: flex;
+  flex-direction: row;
+}
+.search .action input {
+  padding: 0.5rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+.search .action button {
+  margin-left: 1rem;
+  width: 200px;
+}

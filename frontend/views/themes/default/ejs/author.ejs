@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="../css/author.css" />
+    <link rel="stylesheet" type="text/css" href="../css/generic.css" />
+    <title>Yet-Another-Blog</title>
+  </head>
+  <body>
+    <%- include("partials/header.ejs") %>
+
+    <div class="page">
+      <%if(logged_in_user) {%>
+      <div class="page-center">
+        <div class="horizontal-button-container">
+          <button onclick="location='/author/<%= post.owner.id %>/edit'" class="button"><span>Edit Account</span></button>
+        </div>
+      </div>
+      <%}%>
+
+      <div class="page-center nobackground">
+        <div class="biography">
+          <div class="title"><%= post.title %></div>
+
+          <%- post.content %>
+        </div>
+        <div class="about">
+          <div class="profile-picture"><img src="<%= post.profile_picture %>" /></div>
+          <div class="displayname"><%= post.owner.display_name || post.owner.username %></div>
+          <!-- TODO: Format Date/time -->
+          <div class="stat">Registered <%= post.created_date.toLocaleString('en-US', { dateStyle:'medium' }) || "Null" %></div>
+          <div class="stat"><%= post.post_count %> Posts</div>
+          <div class="sociallist">
+            <!-- <a class="link" href="#"></a> -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%- include("partials/footer.ejs") %>
+  </body>
+</html>

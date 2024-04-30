@@ -1,0 +1,60 @@
+.page .page-center {
+  background-color: white;
+  min-height: 100px;
+  box-shadow: #0000001c 0 0px 5px;
+  margin-top: 2rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  width: 1080px;
+  max-width: 1080px;
+  flex-direction: column;
+  border-radius: 5px;
+
+  .page-title {
+    text-align: center;
+    font-size: 1.5rem;
+  }
+
+  .info-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+
+    .title {
+    }
+
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      box-sizing: border-box;
+      background-color: rgb(245, 245, 245);
+      border: 1px solid gray;
+      border-radius: 5px;
+    }
+    textarea {
+      padding: 0.5rem;
+      box-sizing: border-box;
+      max-width: 100%;
+      min-width: 100%;
+      min-height: 5rem;
+      background-color: rgb(245, 245, 245);
+      border: 1px solid gray;
+      //   border-radius: 5px;
+    }
+  }
+
+  .side-by-side-info {
+    display: flex;
+    flex-direction: row;
+
+    input {
+      margin: 0 0.25rem;
+    }
+
+    .button {
+      padding: 0.5rem;
+      box-sizing: border-box;
+      margin: auto;
+    }
+  }
+}

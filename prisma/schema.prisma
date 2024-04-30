@@ -11,45 +11,45 @@ datasource db {
 }
 
 model User {
-  id       String @id @unique @default(uuid())
-  username String @unique
-  password String
+  id           String  @id @unique @default(uuid())
+  username     String  @unique
+  password     String
+  display_name String?
 
-  role  Role    @default(USER)
-  group String?
+  role Role @default(USER)
 
-  blog_posts   BlogPost[]
+  blog_posts   Post[]
   profile_page ProfilePage?
 
   @@index([username, role])
 }
 
-model BlogPost {
+model Post {
   id          String     @id @unique @default(uuid())
   title       String?
   description String?
   content     String?
-  thumbnail   String?
-  images      String[]
-  visibility  PostStatus @default(UNLISTED)
+  media       String[]
+  visibility  PostStatus @default(DRAFT)
   owner       User?      @relation(fields: [ownerid], references: [id], onDelete: Cascade)
   ownerid     String?
 
   // Tags
-  tags     String[]
+  tags Tag[]
 
   // Dates
-  publish_date DateTime?
+  publish_date DateTime? @default(now())
   created_date DateTime  @default(now())
 }
 
 model ProfilePage {
-  id         String     @id @unique @default(uuid())
-  content    String?
-  images     String[]
-  visibility PostStatus @default(UNLISTED)
-  owner      User       @relation(fields: [ownerid], references: [id], onDelete: Cascade)
-  ownerid    String     @unique
+  id           String     @id @unique @default(uuid())
+  content      String?
+  media        String[]
+  visibility   PostStatus @default(UNLISTED)
+  owner        User       @relation(fields: [ownerid], references: [id], onDelete: Cascade)
+  ownerid      String     @unique
+  created_date DateTime   @default(now())
 }
 
 model Setting {
@@ -62,6 +62,18 @@ model Group {
   permissions String[]
 }
 
+model Tag {
+  id    String  @id @unique @default(uuid())
+  name  String  @unique
+  type  TagMode @default(NORMAL)
+  posts Post[]
+}
+
+enum TagMode {
+  NORMAL
+  ALIAS
+}
+
 enum Role {
   LOCKED
   USER
@@ -69,6 +81,8 @@ enum Role {
 }
 
 enum PostStatus {
+  DRAFT
+  PRIVATE
   UNLISTED
   PUBLISHED
 }

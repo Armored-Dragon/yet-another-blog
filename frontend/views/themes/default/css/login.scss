@@ -1,0 +1,44 @@
+.page .page-center {
+  margin-top: 2rem;
+
+  .page-modal {
+    width: 400px;
+    height: 200px;
+    background-color: white;
+    margin: auto;
+    padding: 1rem;
+    box-sizing: border-box;
+
+    .title {
+      font-size: 1.4rem;
+      text-align: center;
+    }
+
+    .login-part {
+      width: 100%;
+      margin-bottom: 1rem;
+
+      input {
+        width: 100%;
+        padding: 0.25rem;
+        box-sizing: border-box;
+      }
+    }
+
+    .action-container {
+      display: flex;
+      flex-direction: row-reverse;
+
+      button {
+        width: 100px;
+        padding: 0.25rem;
+        box-sizing: border-box;
+        margin-left: auto;
+        height: 30px;
+      }
+      a {
+        margin: auto auto auto 0;
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+<div class="header">
+  <div class="page-center">
+    <a class="logo" href="/">
+      <span class="logo-icon icon"></span>
+      <span class="logo-title"><%= website_name %></span>
+    </a>
+
+    <div class="navigation">
+      <a href="/posts">
+        <span>Posts</span>
+      </a>
+      <!--  -->
+      <% if (logged_in_user) { %>
+      <a href="/author/<%= logged_in_user.id %>">
+        <span>Account</span>
+      </a>
+      <% } else {%> <% if(!settings.HIDE_LOGIN) {%>
+      <a href="/login">
+        <span>Login</span>
+      </a>
+      <% } %> <% } %>
+      <!--  -->
+      <% if (logged_in_user?.role == 'ADMIN') { %>
+      <a href="/admin">
+        <span>Admin</span>
+      </a>
+      <% } %>
+    </div>
+  </div>
+</div>

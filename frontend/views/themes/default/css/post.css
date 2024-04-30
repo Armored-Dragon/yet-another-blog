@@ -1,0 +1,27 @@
+.page .page-center {
+  background-color: white;
+  box-shadow: rgba(0, 0, 0, 0.1098039216) 0 0px 5px;
+  margin-top: 2rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  width: 1080px;
+  max-width: 1080px;
+  flex-direction: column;
+  border-radius: 5px;
+}
+.page .page-center .title {
+  font-size: 2rem;
+  font-weight: bold;
+}
+.page .page-center .image-container {
+  max-width: 100%;
+}
+.page .page-center .image-container img {
+  max-width: 100%;
+}
+.page .page-center .horizontal-button-container {
+  width: 100%;
+}
+.page .page-center .horizontal-button-container button {
+  height: 2rem;
+}

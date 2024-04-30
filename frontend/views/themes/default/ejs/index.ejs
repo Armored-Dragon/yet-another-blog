@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="/css/index.css" />
+    <link rel="stylesheet" type="text/css" href="/css/generic.css" />
+    <title>Yet-Another-Blog</title>
+  </head>
+  <body>
+    <%- include("partials/header.ejs") %>
+
+    <div class="page">
+      <%if(logged_in_user) {%>
+      <div class="page-center">
+        <div class="horizontal-button-container">
+          <button onclick="window.location = '/post/new'" class="button"><span>New Post</span></button>
+        </div>
+      </div>
+      <%}%>
+      <div class="page-center">
+        <div class="post-list-container">
+          <div class="post-list">
+            <% for(post of blog_list) { %>
+            <!--  -->
+            <%- include("partials/post.ejs", {post:post}) %>
+            <!--  -->
+            <% } %>
+          </div>
+          <div class="tag-list">
+            <div class="tag-header">TAGS</div>
+            <div class="list">
+              <% for(tag of tags) { %>
+              <a class="tag icon" href="/posts/?search=<%= tag.name  %> "><%= tag.name %></a>
+              <% } %>
+            </div>
+          </div>
+        </div>
+        <%- include("partials/pagination.ejs") %>
+      </div>
+    </div>
+
+    <%- include("partials/footer.ejs") %>
+  </body>
+</html>

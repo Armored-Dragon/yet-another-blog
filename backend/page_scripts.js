@@ -1,35 +1,73 @@
 const external = require("./core/external_api");
 const core = require("./core/core");
 
-function getDefaults(req) {
-  // TODO: Fix reference to website_name
-  return { logged_in_user: req.session.user, website_name: core.settings.WEBSITE_NAME || "Yet-Another-Blog", settings: core.settings };
+function _getThemePage(page_name) {
+  let manifest = require(`../frontend/views/themes/${core.settings.theme}/manifest.json`);
+  return `themes/${core.settings.theme}/${manifest.pages[page_name]}`;
 }
 
+async function getDefaults(req) {
+  // TODO: Fix reference to website_name
+  let user;
+  if (req.session.user) user = await core.getUser({ user_id: req.session.user.id });
+  if (user?.success) user = user.data;
+  return { logged_in_user: user, website_name: core.settings.WEBSITE_NAME || "Yet-Another-Blog", settings: core.settings };
+}
 async function index(request, response) {
   // Check if the master admin has been created
-  const is_setup_complete = core.settings["SETUP_COMPLETE"];
-  if (!is_setup_complete) return response.redirect("/register");
+  // const is_setup_complete = core.settings["SETUP_COMPLETE"];
+  // if (!is_setup_complete) return response.redirect("/register");
 
-  response.redirect("/blog");
+  const blog_list = await core.getPost({ requester_id: request.session.user?.id }, {}, { page: request.query.page || 0 });
+  const tags = await core.getTags();
+
+  blog_list.data.forEach((post) => {
+    let published_date_parts = new Date(post.publish_date).toLocaleDateString().split("/");
+    const formatted_date = `${published_date_parts[2]}-${published_date_parts[0].padStart(2, "0")}-${published_date_parts[1].padStart(2, "0")}`;
+    post.publish_date = formatted_date;
+  });
+
+  response.render(_getThemePage("index"), {
+    ...(await getDefaults(request)),
+    blog_list: blog_list.data,
+    pagination: blog_list.pagination,
+    current_page: request.query.page || 0,
+    loaded_page: request.path,
+    tags: tags,
+  });
 }
-function register(request, response) {
-  response.render("register.ejs", getDefaults(request));
+async function register(request, response) {
+  response.render(_getThemePage("register"), await getDefaults(request));
 }
-function login(request, response) {
-  response.render("login.ejs", getDefaults(request));
+async function login(request, response) {
+  response.render(_getThemePage("login"), await getDefaults(request));
 }
 async function author(req, res) {
-  const user = await core.getUser({ id: req.params.author_id });
+  const user = await core.getUser({ user_id: req.params.author_id });
   // FIXME: Bandage fix for author get error
   if (!user.success) return res.redirect("/");
-  const profile = await core.getAuthorPage({ author_id: user.data.id });
-  res.render("author.ejs", { ...getDefaults(req), blog_post: profile.data });
+  const profile = await core.getBiography({ author_id: user.data.id });
+  // TODO: Check for success
+  const posts = await core.getPost({ requester_id: user.data.id });
+
+  res.render(_getThemePage("author"), { ...(await getDefaults(req)), post: { ...profile.data, post_count: posts.data.length } });
+}
+async function authorEdit(request, response) {
+  let author = await core.getBiography({ author_id: request.params.author_id });
+  if (!author.success) return response.redirect("/");
+  response.render(_getThemePage("authorEdit"), { ...(await getDefaults(request)), profile: author.data });
 }
 async function blogList(req, res) {
-  const blog_list = await core.getBlog({ owner_id: req.session.user?.id, page: req.query.page || 0, search: req.query.search, search_tags: true, search_title: true });
-  res.render("blogList.ejs", {
-    ...getDefaults(req),
+  const blog_list = await core.getPost({ requester_id: req.session.user?.id }, { search: req.query.search, search_title: true, search_tags: true, search_content: true });
+
+  blog_list.data.forEach((post) => {
+    let published_date_parts = new Date(post.publish_date).toLocaleDateString().split("/");
+    const formatted_date = `${published_date_parts[2]}-${published_date_parts[0].padStart(2, "0")}-${published_date_parts[1].padStart(2, "0")}`;
+    post.publish_date = formatted_date;
+  });
+
+  res.render(_getThemePage("postSearch"), {
+    ...(await getDefaults(req)),
     blog_list: blog_list.data,
     pagination: blog_list.pagination,
     current_page: req.query.page || 0,
@@ -37,26 +75,18 @@ async function blogList(req, res) {
   });
 }
 async function blogSingle(req, res) {
-  const blog = await core.getBlog({ id: req.params.blog_id });
-  if (blog.success === false) return res.redirect("/blog");
-  res.render("blogSingle.ejs", { ...getDefaults(req), blog_post: blog.data });
+  const blog = await core.getPost({ post_id: req.params.blog_id });
+  if (blog.success === false) return res.redirect("/");
+  res.render(_getThemePage("post"), { ...(await getDefaults(req)), blog_post: blog.data });
 }
-function blogNew(request, response) {
-  // TODO: Turn date formatting into function
-  let existing_blog = {};
-  let published_date_parts = new Date().toLocaleDateString().split("/");
-  const formatted_date = `${published_date_parts[2]}-${published_date_parts[0].padStart(2, "0")}-${published_date_parts[1].padStart(2, "0")}`;
-  existing_blog.publish_date = formatted_date;
-
-  let published_time_parts = new Date().toLocaleTimeString([], { timeStyle: "short" }).slice(0, 4).split(":");
-  const formatted_time = `${published_time_parts[0].padStart(2, "0")}:${published_time_parts[1].padStart(2, "0")}`;
-  existing_blog.publish_time = formatted_time;
-
-  response.render("blogNew.ejs", { ...getDefaults(request), existing_blog: existing_blog });
+async function blogNew(request, response) {
+  const new_post = await core.newPost({ requester_id: request.session.user.id });
+  return response.redirect(`/post/${new_post}/edit`);
 }
 async function blogEdit(req, res) {
-  let existing_blog = await core.getBlog({ id: req.params.blog_id, raw: true });
-  if (existing_blog.success) existing_blog = existing_blog.data; // FIXME: Quickfix for .success/.data issue
+  let existing_blog = await core.getPost({ post_id: req.params.blog_id });
+  if (!existing_blog.success) return res.redirect("/");
+  existing_blog = existing_blog.data;
 
   let published_time_parts = new Date(existing_blog.publish_date).toLocaleTimeString([], { timeStyle: "short" }).slice(0, 4).split(":");
   const formatted_time = `${published_time_parts[0].padStart(2, "0")}:${published_time_parts[1].padStart(2, "0")}`;
@@ -66,10 +96,10 @@ async function blogEdit(req, res) {
   const formatted_date = `${published_date_parts[2]}-${published_date_parts[0].padStart(2, "0")}-${published_date_parts[1].padStart(2, "0")}`;
   existing_blog.publish_date = formatted_date;
 
-  res.render("blogNew.ejs", { ...getDefaults(req), existing_blog: existing_blog });
+  res.render(_getThemePage("postNew"), { ...(await getDefaults(req)), existing_blog: existing_blog });
 }
 async function admin(request, response) {
-  response.render("admin.ejs", { ...getDefaults(request) });
+  response.render(_getThemePage("admin-settings"), { ...(await getDefaults(request)) });
 }
 async function atom(req, res) {
   res.type("application/xml");
@@ -93,4 +123,5 @@ module.exports = {
   admin,
   atom,
   jsonFeed,
+  authorEdit,
 };

@@ -1,0 +1,106 @@
+.page .page-center {
+  background-color: white;
+  width: 700px;
+  min-height: 50px;
+  margin-top: 4rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  box-shadow: rgba(0, 0, 0, 0.1098039216) 0 0px 5px;
+}
+.page .page-center .header {
+  text-align: center;
+  font-size: 1.5rem;
+}
+.page .page-center .setting-list {
+  display: flex;
+  flex-direction: column;
+}
+.page .page-center .setting-list .setting {
+  width: 100%;
+  height: 32px;
+  background-color: rgb(240, 240, 240);
+  padding: 0.1rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+}
+.page .page-center .setting-list .setting .title {
+  margin: auto auto auto 0;
+}
+.page .page-center .setting-list .setting .value {
+  margin: 0 0 0 auto;
+  display: flex;
+}
+.page .page-center .setting-list .setting .value input[type=text] {
+  margin: auto;
+  font-size: 1rem;
+  text-align: center;
+}
+.page .page-center .setting-list .setting .value input[type=number] {
+  margin: auto;
+  width: 4rem;
+  text-align: right;
+  font-size: 1rem;
+}
+.page .page-center .setting-list .setting.fit-column {
+  flex-direction: column;
+  width: 100%;
+}
+.page .page-center .setting-list .setting:nth-child(even) {
+  background-color: rgb(250, 250, 250);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #b8b8b8;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: #2196f3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196f3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}

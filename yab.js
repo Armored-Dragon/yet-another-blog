@@ -12,9 +12,12 @@ const internal = require("./backend/core/internal_api");
 // Express settings
 app.set("view-engine", "ejs");
 app.set("views", path.join(__dirname, "frontend/views"));
-app.use(express.static(path.join(__dirname, "frontend/public")));
 app.use(express.json({ limit: "500mb" }));
 app.use(express.urlencoded({ extended: false }));
+
+// TODO: Does this persist previous themes? May cause security issues!
+const refreshTheme = (theme_name) => app.use(express.static(path.join(__dirname, `frontend/views/themes/${theme_name}`)));
+refreshTheme("default");
 
 app.use(
   session({
@@ -28,10 +31,12 @@ app.use(
 app.post("/login", checkNotAuthenticated, internal.postLogin);
 app.post("/register", checkNotAuthenticated, internal.postRegister);
 app.post("/setting", checkAuthenticated, internal.postSetting);
-app.post("/api/web/blog", checkAuthenticated, internal.postBlog);
-app.delete("/api/web/blog/image", checkAuthenticated, internal.deleteImage);
-app.delete("/api/web/blog", checkAuthenticated, internal.deleteBlog);
-app.patch("/api/web/blog", checkAuthenticated, internal.patchBlog);
+app.post("/api/web/image", checkAuthenticated, internal.postImage);
+app.delete("/api/web/post/image", checkAuthenticated, internal.deleteImage);
+app.delete("/api/web/post", checkAuthenticated, internal.deleteBlog);
+app.patch("/api/web/post", checkAuthenticated, internal.patchBlog);
+app.patch("/api/web/biography", checkAuthenticated, internal.patchBiography);
+app.patch("/api/web/user", checkAuthenticated, internal.patchUser);
 
 // app.delete("/logout", page_scripts.logout);
 
@@ -40,11 +45,12 @@ app.get("/", page_scripts.index);
 app.get("/login", page_scripts.login);
 app.get("/register", checkNotAuthenticated, page_scripts.register);
 app.get("/author/:author_id", page_scripts.author);
+app.get("/author/:author_id/edit", checkAuthenticated, page_scripts.authorEdit);
 app.get("/admin", checkAuthenticated, page_scripts.admin);
-app.get("/blog", page_scripts.blogList);
-app.get("/blog/new", checkAuthenticated, page_scripts.blogNew);
-app.get("/blog/:blog_id", page_scripts.blogSingle);
-app.get("/blog/:blog_id/edit", checkAuthenticated, page_scripts.blogEdit);
+app.get("/posts", page_scripts.blogList);
+app.get("/post/new", checkAuthenticated, page_scripts.blogNew);
+app.get("/post/:blog_id", page_scripts.blogSingle);
+app.get("/post/:blog_id/edit", checkAuthenticated, page_scripts.blogEdit);
 app.get("/atom", page_scripts.atom);
 app.get("/json", page_scripts.jsonFeed);
 
