@@ -8,7 +8,9 @@
     "register": "/ejs/register.ejs",
     "author": "/ejs/author.ejs",
     "post": "/ejs/post.ejs",
+    "postSearch": "/ejs/postSearch.ejs",
     "settings": "/ejs/login.ejs",
-    "user-settings": "/ejs/user-settings.ejs"
+    "user-settings": "/ejs/user-settings.ejs",
+    "admin-settings": "/ejs/admin-settings.ejs"
   }
 }

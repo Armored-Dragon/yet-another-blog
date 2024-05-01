@@ -47,6 +47,23 @@
       }
     }
 
+    .largeset {
+      flex-direction: column;
+      height: fit-content;
+      .value {
+        width: 100%;
+        padding: 0.25rem;
+        box-sizing: border-box;
+        textarea {
+          width: 100%;
+          margin: auto;
+          font-size: initial;
+          resize: vertical;
+          min-height: 3rem;
+        }
+      }
+    }
+
     .setting.fit-column {
       flex-direction: column;
       width: 100%;

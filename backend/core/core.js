@@ -26,7 +26,7 @@ let settings = {
   CD_JSON: true,
 
   WEBSITE_NAME: "",
-  PLAUSIBLE_URL: "",
+  CUSTOM_HEADER: "",
 
   USER_MINIMUM_PASSWORD_LENGTH: 7,
 
