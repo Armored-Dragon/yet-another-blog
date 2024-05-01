@@ -6,6 +6,7 @@ const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 let s3;
 const crypto = require("crypto");
 const validate = require("../form_validation");
+const permissions = require("../permissions");
 const md = require("markdown-it")()
   .use(require("markdown-it-underline"))
   .use(require("markdown-it-footnote"))
@@ -231,24 +232,20 @@ async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {},
 async function editPost({ requester_id, post_id, post_content }) {
   let user = await getUser({ user_id: requester_id });
   let post = await getPost({ post_id: post_id });
-  let publish_date = null;
 
   if (!user.success) return _r(false, post.message || "User not found");
   user = user.data;
   if (!post.success) return _r(false, post.message || "Post not found");
   post = post.data;
 
-  // Check to see if the requester can update the post
-  // TODO: Permissions
-  let can_update = post.owner.id === user.id || user.role === "ADMIN";
+  // Check if the user can preform the action
+  const can_act = permissions.patchPost(post, user);
+  if (!can_act.success) return _r(false, can_act.message);
 
-  // FIXME: Unsure if this actually works
-  // Check if we already have a formatted publish date
-  if (typeof post.publish_date !== "object") {
-    const [year, month, day] = post.date.split("-");
-    const [hour, minute] = post.time.split(":");
-    publish_date = new Date(year, month - 1, day, hour, minute);
-  }
+  // Validate the post content
+  let validated_post = validate.patchPost(post_content);
+  if (!validated_post.success) return _r(false, can_act.message);
+  validated_post = validated_post.data;
 
   // Handle tags ----
   let database_tag_list = [];
@@ -266,12 +263,10 @@ async function editPost({ requester_id, post_id, post_content }) {
 
   // Rebuild the post to save
   let post_formatted = {
-    title: post_content.title,
-    description: post_content.description,
-    content: post_content.content,
-    visibility: post_content.visibility || "PRIVATE",
-    publish_date: publish_date || post_content.publish_date,
+    ...validated_post,
+    // Handle tag changes
     tags: { disconnect: [...existing_tags], connect: [...database_tag_list] },
+    // Handle media changes
     media: [...post.raw_media, ...post_content.media],
   };
 

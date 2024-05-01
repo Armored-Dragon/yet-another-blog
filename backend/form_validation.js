@@ -41,6 +41,9 @@ function patchPost(post_content) {
     if (tag.length !== 0) tags.push(tag);
   });
 
+  delete post_content.date;
+  delete post_content.time;
+
   // Format the post content
   post_formatted = {
     // Autofill the given data
@@ -62,7 +65,7 @@ function _isUrlSafe(str) {
   return pattern.test(str);
 }
 function _r(s, m, d) {
-  return { success: s, m: m ? m || "Unknown error" : undefined, data: d };
+  return { success: s, message: m ? m || "Unknown error" : undefined, data: d };
 }
 
 module.exports = { newUser, patchPost };
