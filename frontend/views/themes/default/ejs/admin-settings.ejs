@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="">
   <head>
-    <meta charset="utf-8" />
+    <%- include("partials/document-head.ejs") %>
     <link rel="stylesheet" type="text/css" href="../css/settings.css" />
     <link rel="stylesheet" type="text/css" href="../css/generic.css" />
     <script src="/js/generic.js"></script>
-    <title>Yet-Another-Blog</title>
   </head>
   <body>
     <%- include("partials/header.ejs") %>
@@ -59,6 +58,12 @@
             <div class="title">Website Name</div>
             <div class="value">
               <input id="WEBSITE_NAME" value="<%- settings.WEBSITE_NAME -%>" onchange="changeValue(this.id, this)" type="text" />
+            </div>
+          </div>
+          <div class="setting largeset">
+            <div class="title">Custom head</div>
+            <div class="value">
+              <textarea id="CUSTOM_HEADER" onchange="changeValue(this.id, this)" ><%= settings.CUSTOM_HEADER -%></textarea>
             </div>
           </div>
         </div>

@@ -42,6 +42,23 @@
   text-align: right;
   font-size: 1rem;
 }
+.page .page-center .setting-list .largeset {
+  flex-direction: column;
+  height: -moz-fit-content;
+  height: fit-content;
+}
+.page .page-center .setting-list .largeset .value {
+  width: 100%;
+  padding: 0.25rem;
+  box-sizing: border-box;
+}
+.page .page-center .setting-list .largeset .value textarea {
+  width: 100%;
+  margin: auto;
+  font-size: initial;
+  resize: vertical;
+  min-height: 3rem;
+}
 .page .page-center .setting-list .setting.fit-column {
   flex-direction: column;
   width: 100%;
