@@ -19,10 +19,13 @@ function newUser({ username, password } = {}) {
   return _r(true);
 }
 
-function patchPost(post_content) {
+function patchPost(post_content, user, post) {
   let post_formatted = {}; // The formatted post content object that will be returned upon success
   let publish_date; // Time and date the post should be made public
   let tags = []; // An array of tags for the post
+
+  if (!user.success) return _r(false, "User not found");
+  if (!post.success) return _r(false, "Post not found");
 
   // Get the publish date in a standard format
   const [year, month, day] = post_content.date.split("-");
@@ -56,7 +59,14 @@ function patchPost(post_content) {
     publish_date: publish_date,
   };
 
-  return _r(true, null, post_formatted);
+  return _r(true, null, { post_formatted: post_formatted, user: user.data, post: post.data });
+}
+
+function patchBiography(biography_content, user, biography) {
+  if (!user.success) return _r(false, "User not found");
+  if (!biography.success) return _r(false, "Post not found");
+
+  return _r(true, null, { biography_content: biography_content, user: user.data, biography: biography.data });
 }
 
 //  Helper functions --------------------
@@ -68,4 +78,4 @@ function _r(s, m, d) {
   return { success: s, message: m ? m || "Unknown error" : undefined, data: d };
 }
 
-module.exports = { newUser, patchPost };
+module.exports = { newUser, patchPost, patchBiography };

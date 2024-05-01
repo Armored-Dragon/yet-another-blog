@@ -235,21 +235,19 @@ async function editPost({ requester_id, post_id, post_content }) {
   let user = await getUser({ user_id: requester_id });
   let post = await getPost({ post_id: post_id });
 
-  if (!user.success) return _r(false, post.message || "User not found");
-  user = user.data;
-  if (!post.success) return _r(false, post.message || "Post not found");
-  post = post.data;
+  // Validate the post content
+  let validated_post = validate.patchPost(post_content, user, post);
+  if (!validated_post.success) return _r(false, validated_post.message);
+
+  user = validated_post.data.user;
+  post = validated_post.data.post;
+  validated_post = validated_post.data.post_formatted;
 
   // Check if the user can preform the action
   const can_act = permissions.patchPost(post, user);
   if (!can_act.success) return _r(false, can_act.message);
 
-  // Validate the post content
-  let validated_post = validate.patchPost(post_content);
-  if (!validated_post.success) return _r(false, can_act.message);
-  validated_post = validated_post.data;
-
-  // Handle tags ----
+  // Handle tags ----------
   let database_tag_list = [];
   const existing_tags = post.tags?.map((tag) => ({ name: tag })) || [];
 
@@ -331,13 +329,16 @@ async function updateBiography({ requester_id, author_id, biography_content }) {
   let user = await getUser({ user_id: requester_id });
   let biography = await getBiography({ author_id: author_id });
 
-  if (!user.success) return _r(false, user.message || "Author not found");
-  user = user.data;
-  if (!biography.success) return _r(false, biography.message || "Post not found");
-  biography = biography.data;
+  // Validate post ----------
+  let formatted_biography = validate.patchBiography(biography_content, user, biography);
+  if (!formatted_biography.success) return _r(false, formatted_biography.message);
 
-  // Permission check
-  const can_act = permissions.patchBiography(biography_content, user);
+  user = formatted_biography.data.user;
+  biography = formatted_biography.data.biography;
+  biography_content = formatted_biography.data.biography_content;
+
+  // Permission check ----------
+  const can_act = permissions.patchBiography(biography_content, user, biography);
   if (!can_act.success) return _r(false, "User not permitted");
 
   let formatted = {
