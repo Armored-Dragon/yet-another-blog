@@ -62,7 +62,7 @@ async function patchBlog(req, res) {
   // User is admin, or user is author
 
   // Validate blog info
-  let valid = await validate.postBlog(req.body);
+  let valid = await validate.patchPost(req.body);
 
   if (!valid.success) return { success: false, message: valid.message || "Post failed validation" };
   valid = valid.data;

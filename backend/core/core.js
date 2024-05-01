@@ -5,6 +5,7 @@ const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListO
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 let s3;
 const crypto = require("crypto");
+const validate = require("../form_validation");
 const md = require("markdown-it")()
   .use(require("markdown-it-underline"))
   .use(require("markdown-it-footnote"))
@@ -59,22 +60,23 @@ function _initS3Storage() {
 
 // Users
 async function newUser({ username, password, role } = {}) {
-  if (!username) return _r(false, "Username not specified");
-  if (!password) return _r(false, "Password not specified");
+  // Sanity check on user registration.
+  const valid = validate.newUser({ username: username, password: password });
+  if (!valid.success) return _r(false, valid.message);
 
   // Create the account
   try {
     user_database_entry = await prisma.user.create({ data: { username: username, password: password, role: role } });
   } catch (e) {
     let message = "Unknown error";
-    return { success: false, message: message };
+    return _r(false, message);
   }
 
   // Create the profile page and link
   try {
     user_profile_database_entry = await prisma.profilePage.create({ data: { owner: { connect: { id: user_database_entry.id } } } });
   } catch (e) {
-    return { success: false, message: `Error creating profile page for user ${username}` };
+    return _r(false, `Error creating profile page for user ${username}`);
   }
 
   // Master user was created; server initialized
