@@ -15,8 +15,12 @@ function patchPost(post_content, user) {
   // User is not permitted
   return _r(false, "User is not permitted to preform action.");
 }
+function patchBiography(biography, user) {
+  // Biographies are just fancy posts right now.
+  return patchPost(biography, user);
+}
 
 function _r(s, m, d) {
   return { success: s, message: m ? m || "Unknown error" : undefined, data: d };
 }
-module.exports = { patchPost };
+module.exports = { patchPost, patchBiography };

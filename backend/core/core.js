@@ -98,6 +98,7 @@ async function getUser({ user_id, username, include_password = false }) {
 
   return { success: true, data: user };
 }
+// TODO: Rename patchUser
 async function editUser({ requester_id, user_id, user_content }) {
   let user = await getUser({ user_id: user_id });
   if (!user.success) return _r(false, "User not found");
@@ -229,6 +230,7 @@ async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {},
     return pageList.slice(0, 5);
   }
 }
+// TODO: Rename patchPost
 async function editPost({ requester_id, post_id, post_content }) {
   let user = await getUser({ user_id: requester_id });
   let post = await getPost({ post_id: post_id });
@@ -324,18 +326,19 @@ async function getBiography({ requester_id, author_id }) {
 
   return { success: true, data: post };
 }
+// TODO: Rename to patchBiography
 async function updateBiography({ requester_id, author_id, biography_content }) {
   let user = await getUser({ user_id: requester_id });
   let biography = await getBiography({ author_id: author_id });
 
   if (!user.success) return _r(false, user.message || "Author not found");
   user = user.data;
-
   if (!biography.success) return _r(false, biography.message || "Post not found");
   biography = biography.data;
 
-  let can_update = biography.owner.id === user.id || user.role === "ADMIN";
-  if (!can_update) return _r(false, "User not permitted");
+  // Permission check
+  const can_act = permissions.patchBiography(biography_content, user);
+  if (!can_act.success) return _r(false, "User not permitted");
 
   let formatted = {
     content: biography_content.content,
