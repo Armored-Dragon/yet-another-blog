@@ -140,28 +140,6 @@ async function newPost({ requester_id }) {
   return post.id;
 }
 async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {}, { search, search_title, search_content, search_tags } = {}, { limit = 10, page = 0, pagination = true } = {}) {
-  // Get a single post
-  if (post_id) {
-    let post;
-    post = await prisma.post.findUnique({ where: { id: post_id }, include: { owner: true, tags: true } });
-    if (!post) return _r(false, "Post does not exist");
-    post = _stripPrivatePost(post);
-
-    // Tags
-    let post_tags = [];
-    post.raw_tags = [];
-    post.tags.forEach((tag) => {
-      post_tags.push(tag.name);
-      post.raw_tags.push();
-    });
-    post.tags = post_tags;
-
-    // Render post
-    return { success: true, data: await _renderPost(post) };
-  }
-
-  // Otherwise build WHERE_OBJECT using data we do have
-  let post_list = [];
   let where_object = {
     OR: [
       // Standard discovery: Public, and after the publish date
@@ -190,6 +168,35 @@ async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {},
       },
     ],
   };
+
+  // Get a single post
+  if (post_id) {
+    let post;
+
+    // We can view unlisted posts, but we don't want them to show up otherwise in search.
+    // Inject a "unlisted" inclusion into where_object to allow direct viewing of unlisted posts
+    where_object["OR"].push({ visibility: "UNLISTED" });
+
+    post = await prisma.post.findUnique({ where: { ...where_object, id: post_id }, include: { owner: true, tags: true } });
+    if (!post) return _r(false, "Post does not exist");
+    post = _stripPrivatePost(post);
+
+    // Tags
+    let post_tags = [];
+    post.raw_tags = [];
+    post.tags.forEach((tag) => {
+      post_tags.push(tag.name);
+      post.raw_tags.push();
+    });
+    post.tags = post_tags;
+
+    // Render post
+    return { success: true, data: await _renderPost(post) };
+  }
+
+  // Otherwise build WHERE_OBJECT using data we do have
+  let post_list = [];
+
   // Build the "where_object" object
   if (search) {
     if (search_tags) where_object["AND"][0]["OR"].push({ tags: { some: { name: search?.toLowerCase() } } });
