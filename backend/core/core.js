@@ -5,6 +5,8 @@ const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListO
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 let s3;
 const crypto = require("crypto");
+const validate = require("../form_validation");
+const permissions = require("../permissions");
 const md = require("markdown-it")()
   .use(require("markdown-it-underline"))
   .use(require("markdown-it-footnote"))
@@ -59,22 +61,23 @@ function _initS3Storage() {
 
 // Users
 async function newUser({ username, password, role } = {}) {
-  if (!username) return _r(false, "Username not specified");
-  if (!password) return _r(false, "Password not specified");
+  // Sanity check on user registration.
+  const valid = validate.newUser({ username: username, password: password });
+  if (!valid.success) return _r(false, valid.message);
 
   // Create the account
   try {
     user_database_entry = await prisma.user.create({ data: { username: username, password: password, role: role } });
   } catch (e) {
     let message = "Unknown error";
-    return { success: false, message: message };
+    return _r(false, message);
   }
 
   // Create the profile page and link
   try {
     user_profile_database_entry = await prisma.profilePage.create({ data: { owner: { connect: { id: user_database_entry.id } } } });
   } catch (e) {
-    return { success: false, message: `Error creating profile page for user ${username}` };
+    return _r(false, `Error creating profile page for user ${username}`);
   }
 
   // Master user was created; server initialized
@@ -95,6 +98,7 @@ async function getUser({ user_id, username, include_password = false }) {
 
   return { success: true, data: user };
 }
+// TODO: Rename patchUser
 async function editUser({ requester_id, user_id, user_content }) {
   let user = await getUser({ user_id: user_id });
   if (!user.success) return _r(false, "User not found");
@@ -226,29 +230,24 @@ async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {},
     return pageList.slice(0, 5);
   }
 }
+// TODO: Rename patchPost
 async function editPost({ requester_id, post_id, post_content }) {
   let user = await getUser({ user_id: requester_id });
   let post = await getPost({ post_id: post_id });
-  let publish_date = null;
 
-  if (!user.success) return _r(false, post.message || "User not found");
-  user = user.data;
-  if (!post.success) return _r(false, post.message || "Post not found");
-  post = post.data;
+  // Validate the post content
+  let validated_post = validate.patchPost(post_content, user, post);
+  if (!validated_post.success) return _r(false, validated_post.message);
 
-  // Check to see if the requester can update the post
-  // TODO: Permissions
-  let can_update = post.owner.id === user.id || user.role === "ADMIN";
+  user = validated_post.data.user;
+  post = validated_post.data.post;
+  validated_post = validated_post.data.post_formatted;
 
-  // FIXME: Unsure if this actually works
-  // Check if we already have a formatted publish date
-  if (typeof post.publish_date !== "object") {
-    const [year, month, day] = post.date.split("-");
-    const [hour, minute] = post.time.split(":");
-    publish_date = new Date(year, month - 1, day, hour, minute);
-  }
+  // Check if the user can preform the action
+  const can_act = permissions.patchPost(post, user);
+  if (!can_act.success) return _r(false, can_act.message);
 
-  // Handle tags ----
+  // Handle tags ----------
   let database_tag_list = [];
   const existing_tags = post.tags?.map((tag) => ({ name: tag })) || [];
 
@@ -264,12 +263,10 @@ async function editPost({ requester_id, post_id, post_content }) {
 
   // Rebuild the post to save
   let post_formatted = {
-    title: post_content.title,
-    description: post_content.description,
-    content: post_content.content,
-    visibility: post_content.visibility || "PRIVATE",
-    publish_date: publish_date || post_content.publish_date,
+    ...validated_post,
+    // Handle tag changes
     tags: { disconnect: [...existing_tags], connect: [...database_tag_list] },
+    // Handle media changes
     media: [...post.raw_media, ...post_content.media],
   };
 
@@ -327,18 +324,22 @@ async function getBiography({ requester_id, author_id }) {
 
   return { success: true, data: post };
 }
+// TODO: Rename to patchBiography
 async function updateBiography({ requester_id, author_id, biography_content }) {
   let user = await getUser({ user_id: requester_id });
   let biography = await getBiography({ author_id: author_id });
 
-  if (!user.success) return _r(false, user.message || "Author not found");
-  user = user.data;
+  // Validate post ----------
+  let formatted_biography = validate.patchBiography(biography_content, user, biography);
+  if (!formatted_biography.success) return _r(false, formatted_biography.message);
 
-  if (!biography.success) return _r(false, biography.message || "Post not found");
-  biography = biography.data;
+  user = formatted_biography.data.user;
+  biography = formatted_biography.data.biography;
+  biography_content = formatted_biography.data.biography_content;
 
-  let can_update = biography.owner.id === user.id || user.role === "ADMIN";
-  if (!can_update) return _r(false, "User not permitted");
+  // Permission check ----------
+  const can_act = permissions.patchBiography(biography_content, user, biography);
+  if (!can_act.success) return _r(false, "User not permitted");
 
   let formatted = {
     content: biography_content.content,

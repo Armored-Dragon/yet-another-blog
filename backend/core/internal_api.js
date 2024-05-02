@@ -57,18 +57,7 @@ async function deleteBlog(req, res) {
   return res.json(await core.deletePost({ post_id: req.body.id, requester_id: req.session.user.id }));
 }
 async function patchBlog(req, res) {
-  // FIXME: validate does not return post id
-  // Can user change post?
-  // User is admin, or user is author
-
-  // Validate blog info
-  let valid = await validate.postBlog(req.body);
-
-  if (!valid.success) return { success: false, message: valid.message || "Post failed validation" };
-  valid = valid.data;
-
-  // TODO: Permissions for updating blog
-  return res.json(await core.editPost({ requester_id: req.session.user.id, post_id: req.body.id, post_content: valid }));
+  return res.json(await core.editPost({ requester_id: req.session.user.id, post_id: req.body.id, post_content: req.body }));
 }
 async function patchBiography(request, response) {
   // TODO: Validate
