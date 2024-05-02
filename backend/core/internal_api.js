@@ -5,7 +5,7 @@ const validate = require("../form_validation");
 async function postRegister(req, res) {
   const { username, password } = req.body; // Get the username and password from the request body
 
-  const form_validation = await validate.registerUser(username, password); // Check form for errors
+  const form_validation = await validate.newUser({ username: username, password: password }); // Check form for errors
 
   // User registration disabled?
   // We also check if the server was setup. If it was not set up, the server will proceed anyways.

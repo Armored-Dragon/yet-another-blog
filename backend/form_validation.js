@@ -5,10 +5,10 @@
 // Format given data in an accessible way
 //
 
-const core = require("./core/core");
-
 // Make sure the user registration data is safe and valid.
 function newUser({ username, password } = {}) {
+  const core = require("./core/core"); // HACK: Need to require the core module here because the settings don't get set otherwise.
+
   if (!username) return _r(false, "No username provided");
   if (!password) return _r(false, "No password provided");
   if (password.length < core.settings["USER_MINIMUM_PASSWORD_LENGTH"]) return _r(false, `Password is not long enough. Minimum length is ${core.settings["USER_MINIMUM_PASSWORD_LENGTH"]}`);

@@ -169,6 +169,14 @@ async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {},
     ],
   };
 
+  // Admins can view everything at any point
+  let user;
+  if (requester_id) {
+    user = await getUser({ user_id: requester_id });
+    if (user.success) user = user.data;
+    if (user.role === "ADMIN") where_object["OR"].push({ NOT: { id: "" } });
+  }
+
   // Get a single post
   if (post_id) {
     let post;
@@ -176,6 +184,9 @@ async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {},
     // We can view unlisted posts, but we don't want them to show up otherwise in search.
     // Inject a "unlisted" inclusion into where_object to allow direct viewing of unlisted posts
     where_object["OR"].push({ visibility: "UNLISTED" });
+
+    // Allow getting drafts if the requesting user owns the draft
+    where_object["OR"].push({ AND: [{ visibility: "DRAFT" }, { ownerid: requester_id }] });
 
     post = await prisma.post.findUnique({ where: { ...where_object, id: post_id }, include: { owner: true, tags: true } });
     if (!post) return _r(false, "Post does not exist");
@@ -606,7 +617,7 @@ async function postSetting(key, value) {
 async function editSetting({ name, value }) {
   if (!Object.keys(settings).includes(name)) return _r(false, "Setting is not valid");
 
-  await prisma.setting.upsert({ where: { id: key }, update: { value: value }, create: { id: key, value: value } });
+  await prisma.setting.upsert({ where: { id: name }, update: { value: value }, create: { id: name, value: value } });
   try {
     settings[key] = JSON.parse(value);
   } catch {

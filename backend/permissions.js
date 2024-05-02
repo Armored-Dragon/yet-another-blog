@@ -16,8 +16,14 @@ function patchPost(post_content, user) {
   return _r(false, "User is not permitted to preform action.");
 }
 function patchBiography(biography, user) {
-  // Biographies are just fancy posts right now.
-  return patchPost(biography, user);
+  // Admins can always update any post
+  if (user.role === "ADMIN") return _r(true);
+
+  // User edits their own account
+  if (biography.id === user.id) return _r(true);
+
+  // User is not permitted
+  return _r(false, "User is not permitted to preform action.");
 }
 
 function _r(s, m, d) {
