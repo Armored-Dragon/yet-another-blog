@@ -23,7 +23,7 @@ async function getFeed({ type = "rss" }) {
   let feed = getBaseFeed();
 
   // Get posts
-  let posts = await core.getPost(null, null, { limit: 20 });
+  let posts = await core.getPost(undefined, undefined, { limit: 20 });
 
   // For each post, add a formatted object to the feed
   posts.data.forEach((post) => {
@@ -45,7 +45,6 @@ async function getFeed({ type = "rss" }) {
 
     feed.addItem(formatted);
   });
-  //   if (type === "rss") return feed.rss2();
   if (type === "atom") return feed.atom1();
   if (type === "json") return feed.json1();
 }
