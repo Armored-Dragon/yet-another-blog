@@ -75,7 +75,7 @@ async function blogList(req, res) {
   });
 }
 async function blogSingle(req, res) {
-  const blog = await core.getPost({ post_id: req.params.blog_id });
+  const blog = await core.getPost({ requester_id: req.session.user?.id, post_id: req.params.blog_id });
   if (blog.success === false) return res.redirect("/");
   res.render(_getThemePage("post"), { ...(await getDefaults(req)), blog_post: blog.data });
 }
