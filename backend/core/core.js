@@ -100,7 +100,7 @@ async function getUser({ user_id, username, include_password = false }) {
 	return { success: true, data: user };
 }
 async function editUser({ requester_id, user_id, user_content }) {
-	let user = await getUser({ user_id: user_id });
+	let user = await getUser({ user_id: user_id, include_password: true });
 	if (!user.success) return _r(false, "User not found");
 	user = user.data;
 
@@ -117,7 +117,11 @@ async function editUser({ requester_id, user_id, user_content }) {
 	formatted[user_content.setting_name] = user_content.value;
 
 	if (formatted.password) {
-		// TODO: Validate password
+		// Check if the current password matches the one on file
+		const password_match = await bcrypt.compare(user_content.original_password, user.password);
+		if (!password_match) return _r(false, "Incorrect password.");
+
+		// If password was correct, update the database
 		formatted.password = await bcrypt.hash(formatted.password, 10);
 	}
 
