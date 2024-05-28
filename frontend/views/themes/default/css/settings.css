@@ -121,3 +121,41 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+dialog {
+  border-radius: 5px;
+  border: 0;
+  min-width: 300px;
+}
+dialog .title {
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+dialog .entry {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+dialog .entry input {
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+  font-size: 1.1rem;
+}
+dialog .status {
+  margin-bottom: 1rem;
+  color: red;
+  text-align: center;
+}
+dialog .horizontal-button-container {
+  display: flex;
+  flex-direction: row;
+}
+dialog .horizontal-button-container * {
+  flex-grow: 1;
+  margin: 0 0.1rem;
+}
+
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}

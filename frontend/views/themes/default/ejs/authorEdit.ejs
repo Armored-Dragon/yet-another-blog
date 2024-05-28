@@ -1,43 +1,67 @@
 <!DOCTYPE html>
 <html lang="">
-  <head>
-    <%- include("partials/document-head.ejs") %>
-    <link rel="stylesheet" type="text/css" href="/css/settings.css" />
-    <link rel="stylesheet" type="text/css" href="/css/generic.css" />
-    <script src="/js/generic.js"></script>
-    <title>Yet-Another-Blog</title>
-  </head>
-  <body>
-    <%- include("partials/header.ejs") %>
-    <div class="page">
-      <div class="page-center">
-        <div class="header">User Settings</div>
-        <div class="setting-list">
-          <div class="setting">
-            <div class="title">Display Name</div>
-            <div class="value">
-              <input id="display_name" value="<%- profile.owner.display_name -%>" onchange="changeValue(this.id, this)" type="text" />
-            </div>
-          </div>
-          <div class="setting">
-            <div class="title">Change Password</div>
-            <button class="button bad"><span>Open Dialog</span></button>
-          </div>
-          <div class="setting">
-            <div class="title">Change Profile Picture</div>
-            <div class="value">
-              <input id="profile_picture" onchange="changeValue(this.id, this)" type="file" />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="page-center">
-        <div class="header">Biography</div>
-        <%- include("partials/richTextEditor.ejs", {text_selector: 'post-content', prefill: profile.raw_content}) %>
-        <button class="button" onclick="updateBiography()"><span>Save Biography</span></button>
-      </div>
-    </div>
-    <%- include("partials/footer.ejs") %>
-  </body>
+	<head>
+		<%- include("partials/document-head.ejs") %>
+		<link rel="stylesheet" type="text/css" href="/css/settings.css" />
+		<link rel="stylesheet" type="text/css" href="/css/generic.css" />
+		<script src="/js/generic.js"></script>
+		<title>Yet-Another-Blog</title>
+	</head>
+	<body>
+		<dialog id="change-password-dialog">
+			<div class="title">
+				<span>Change Password</span>
+			</div>
+
+			<div class="entry">
+				<div>Current password</div>
+				<input id="cp-current" type="password" oninput="changePasswordInputUpdate()" />
+			</div>
+			<div class="entry">
+				<div>New password</div>
+				<input id="cp-new-1" type="password" oninput="changePasswordInputUpdate()" />
+			</div>
+			<div class="entry">
+				<div>Confirm password</div>
+				<input id="cp-new-2" type="password" oninput="changePasswordInputUpdate()" />
+			</div>
+			<div class="status">Please enter your current password.</div>
+			<div class="horizontal-button-container">
+				<button class="button good" onclick="sendPasswordUpdate()">Accept</button>
+				<button id="cp-cancel" class="button bad">Cancel</button>
+			</div>
+		</dialog>
+
+		<%- include("partials/header.ejs") %>
+		<div class="page">
+			<div class="page-center">
+				<div class="header">User Settings</div>
+				<div class="setting-list">
+					<div class="setting">
+						<div class="title">Display Name</div>
+						<div class="value">
+							<input id="display_name" value="<%- profile.owner.display_name -%>" onchange="changeValue(this.id, this)" type="text" />
+						</div>
+					</div>
+					<div class="setting">
+						<div class="title">Change Password</div>
+						<button id="change-password-button" class="button bad"><span>Open Dialog</span></button>
+					</div>
+					<div class="setting">
+						<div class="title">Change Profile Picture</div>
+						<div class="value">
+							<input id="profile_picture" onchange="changeValue(this.id, this)" type="file" />
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="page-center">
+				<div class="header">Biography</div>
+				<%- include("partials/richTextEditor.ejs", {text_selector: 'post-content', prefill: profile.raw_content}) %>
+				<button class="button" onclick="updateBiography()"><span>Save Biography</span></button>
+			</div>
+		</div>
+		<%- include("partials/footer.ejs") %>
+	</body>
 </html>
 <script defer src="/js/editAuthor.js"></script>
