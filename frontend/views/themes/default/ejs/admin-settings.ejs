@@ -68,6 +68,30 @@
           </div>
         </div>
       </div>
+
+      <div class="page-center">
+        <div class="header">Themes</div>
+        
+        <div class="theme-list">
+          <div class="add-theme-area">
+            <input id="theme-url" placeholder="Enter a git repository URL" type="text">
+            <button onclick="addTheme()">Add</button> 
+          </div>
+
+          <% for(theme of theme_data.installed) { %>
+            <!--  -->
+            <div class="entry <% if(theme == theme_data.current) {%> active <% } %>">
+            <div class="title"><%= theme %></div>
+            <div class="value">
+              <button onclick="setTheme('<%= theme %>')" type="button">Use</button>
+            </div>
+          </div>
+            <!--  -->
+          <% } %>
+
+
+        </div>
+      </div>
     </div>
 
     <%- include("partials/footer.ejs") %>
