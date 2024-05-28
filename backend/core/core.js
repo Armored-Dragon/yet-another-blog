@@ -107,11 +107,6 @@ async function editUser({ requester_id, user_id, user_content }) {
 	// TODO:
 	// If there was a role change, see if the acting user can make these changes
 
-	// TODO:
-	// If there was a password change,
-	// check to see if the user can make these changes
-	// Hash the password
-
 	// FIXME: Not secure. ASAP!
 	let formatted = {};
 	formatted[user_content.setting_name] = user_content.value;
