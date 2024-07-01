@@ -15,17 +15,11 @@ app.set("views", path.join(__dirname, "frontend/views"));
 app.use(express.json({ limit: "500mb" }));
 app.use(express.urlencoded({ extended: false }));
 
-// TODO: Does this persist previous themes? May cause security issues!
-function refreshTheme(theme_name) {
-	app.use(express.static(path.join(__dirname, `frontend/views/themes/${theme_name}`)));
-}
-refreshTheme("default");
-
-// FIXME: Nope! Find a better way.
-setInterval(() => {
+app.use((req, res, next) => {
 	let theme = require("./backend/core/core").settings.theme;
-	refreshTheme(theme);
-}, 5000);
+	let middleware = express.static(path.join(__dirname, `frontend/views/themes/${theme}`));
+	middleware(req, res, next);
+});
 
 app.use(
 	session({
