@@ -20,11 +20,11 @@ const refreshTheme = (theme_name) => app.use(express.static(path.join(__dirname,
 refreshTheme("default");
 
 app.use(
-  session({
-    secret: require("crypto").randomBytes(128).toString("base64"),
-    resave: false,
-    saveUninitialized: false,
-  })
+	session({
+		secret: require("crypto").randomBytes(128).toString("base64"),
+		resave: false,
+		saveUninitialized: false,
+	})
 );
 
 // API
@@ -55,13 +55,13 @@ app.get("/atom", page_scripts.atom);
 app.get("/json", page_scripts.jsonFeed);
 
 function checkAuthenticated(req, res, next) {
-  if (req.session.user) return next();
-  res.redirect("/login");
+	if (req.session.user) return next();
+	res.redirect("/login");
 }
 
 function checkNotAuthenticated(req, res, next) {
-  if (req.session.user) return res.redirect("/");
-  next();
+	if (req.session.user) return res.redirect("/");
+	next();
 }
 
 app.listen(5004);
