@@ -5,3 +5,5 @@
 .vscode/settings.json
 /frontend/public/img/.dev
 /prisma/migrations
+/frontend/views/themes
+!/frontend/views/themes/default

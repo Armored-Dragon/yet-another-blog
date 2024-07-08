@@ -66,5 +66,11 @@ async function patchBiography(request, response) {
 async function patchUser(request, response) {
 	return response.json(await core.editUser({ requester_id: request.session.user.id, user_id: request.body.id, user_content: request.body }));
 }
+async function postTheme(request, response) {
+	return response.json(await core.installTheme(request.body.url, { requester_id: request.session.user.id }));
+}
+async function deleteTheme(request, response) {
+	return response.json(await core.deleteTheme(request.body.name, { requester_id: request.session.user.id }));
+}
 
-module.exports = { postRegister, patchBiography, postLogin, postSetting, postImage, deleteImage, deleteBlog, patchBlog, patchUser };
+module.exports = { postRegister, patchBiography, postLogin, postSetting, postImage, deleteImage, deleteBlog, patchBlog, patchUser, postTheme, deleteTheme };

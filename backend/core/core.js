@@ -608,6 +608,11 @@ async function postSetting(key, value) {
 			settings[key] = value;
 		}
 
+		// Refresh the theme if it was a theme change
+		if (key === "theme") {
+			// Refresh the theme
+		}
+
 		return { success: true };
 	} catch (e) {
 		return { success: false, message: e.message };
@@ -627,6 +632,39 @@ async function editSetting({ name, value }) {
 	return _r(true);
 }
 
+async function installTheme(url, { requester_id } = {}) {
+	// User is admin?
+	let user = await getUser({ user_id: requester_id });
+	if (!user.success) return _r(false, "User does not exist.");
+	user = user.data;
+	if (user.role !== "ADMIN") return _r(false, "User is not permitted.");
+
+	// TODO: Test if git repo has valid manifest.json
+
+	const path = require("path");
+	const { execSync } = require("child_process");
+
+	execSync(`git clone ${url}`, {
+		stdio: [0, 1, 2], // we need this so node will print the command output
+		cwd: path.resolve(__dirname, "../../frontend/views/themes"), // path to where you want to save the file
+	});
+	return _r(true);
+}
+async function deleteTheme(name, { requester_id } = {}) {
+	let user = await getUser({ user_id: requester_id });
+	if (!user.success) return _r(false, "User does not exist.");
+	user = user.data;
+	if (user.role !== "ADMIN") return _r(false, "User is not permitted.");
+
+	const path = require("path");
+	const { execSync } = require("child_process");
+	if (!name) _r(false, "Panic! No theme specified");
+
+	execSync(`rm -r ${name}`, {
+		cwd: path.resolve(__dirname, "../../frontend/views/themes"),
+	});
+	return _r(true);
+}
 function _stripPrivatePost(post) {
 	if (!post) return;
 	if (post.owner) delete post.owner.password;
@@ -636,4 +674,4 @@ const _r = (s, m) => {
 	return { success: s, message: m };
 };
 
-module.exports = { settings, newUser, getUser, editUser, getPost, newPost, editPost, deletePost, getBiography, updateBiography, uploadMedia, getTags, postSetting, getSetting };
+module.exports = { settings, newUser, getUser, editUser, getPost, newPost, editPost, deletePost, getBiography, updateBiography, uploadMedia, getTags, postSetting, getSetting, installTheme, deleteTheme };

@@ -1,5 +1,7 @@
 const external = require("./core/external_api");
 const core = require("./core/core");
+const fs = require("fs");
+const path = require("path");
 
 function _getThemePage(page_name) {
 	let manifest = require(`../frontend/views/themes/${core.settings.theme}/manifest.json`);
@@ -99,7 +101,17 @@ async function blogEdit(req, res) {
 	res.render(_getThemePage("postNew"), { ...(await getDefaults(req)), existing_blog: existing_blog });
 }
 async function admin(request, response) {
-	response.render(_getThemePage("admin-settings"), { ...(await getDefaults(request)) });
+	let theme_data = {
+		installed: [],
+		current: core.settings.theme,
+	};
+
+	// Get theme list
+	fs.readdir(path.resolve(__dirname, "../frontend/views/themes"), (err, files) => {
+		files.forEach((theme) => theme_data.installed.push(theme));
+	});
+
+	response.render(_getThemePage("admin-settings"), { ...(await getDefaults(request)), theme_data: theme_data });
 }
 async function atom(req, res) {
 	res.type("application/xml");

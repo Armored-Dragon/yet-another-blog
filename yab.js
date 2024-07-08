@@ -15,9 +15,11 @@ app.set("views", path.join(__dirname, "frontend/views"));
 app.use(express.json({ limit: "500mb" }));
 app.use(express.urlencoded({ extended: false }));
 
-// TODO: Does this persist previous themes? May cause security issues!
-const refreshTheme = (theme_name) => app.use(express.static(path.join(__dirname, `frontend/views/themes/${theme_name}`)));
-refreshTheme("default");
+app.use((req, res, next) => {
+	let theme = require("./backend/core/core").settings.theme;
+	let middleware = express.static(path.join(__dirname, `frontend/views/themes/${theme}`));
+	middleware(req, res, next);
+});
 
 app.use(
 	session({
@@ -34,9 +36,11 @@ app.post("/setting", checkAuthenticated, internal.postSetting);
 app.post("/api/web/image", checkAuthenticated, internal.postImage);
 app.delete("/api/web/post/image", checkAuthenticated, internal.deleteImage);
 app.delete("/api/web/post", checkAuthenticated, internal.deleteBlog);
+app.delete("/api/theme", checkAuthenticated, internal.deleteTheme);
 app.patch("/api/web/post", checkAuthenticated, internal.patchBlog);
 app.patch("/api/web/biography", checkAuthenticated, internal.patchBiography);
 app.patch("/api/web/user", checkAuthenticated, internal.patchUser);
+app.post("/api/theme", checkAuthenticated, internal.postTheme);
 
 // app.delete("/logout", page_scripts.logout);
 

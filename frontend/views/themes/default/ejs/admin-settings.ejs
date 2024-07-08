@@ -1,74 +1,99 @@
 <!DOCTYPE html>
 <html lang="">
-	<head>
-		<%- include("partials/document-head.ejs") %>
-		<link rel="stylesheet" type="text/css" href="../css/settings.css" />
-		<link rel="stylesheet" type="text/css" href="../css/generic.css" />
-		<script src="/js/generic.js"></script>
-	</head>
-	<body>
-		<%- include("partials/header.ejs") %>
-		<div class="page">
-			<div class="page-center">
-				<div class="header"><%= website_name %> Admin Settings</div>
-				<div class="setting-list">
-					<div class="setting">
-						<div class="title">User registration</div>
-						<div class="value">
-							<label class="switch">
-								<input <% if(settings.ACCOUNT_REGISTRATION) {% /> checked <% } %> id="ACCOUNT_REGISTRATION" onchange="toggleState(this.id, this)" type="checkbox" />
-								<span class="slider round"></span>
-							</label>
-						</div>
-					</div>
-					<div class="setting">
-						<div class="title">Hide "Login" in navigation bar</div>
-						<div class="value">
-							<label class="switch">
-								<input <% if(settings.HIDE_LOGIN) {% /> checked <% } %> id="HIDE_LOGIN" onchange="toggleState(this.id, this)" type="checkbox" />
-								<span class="slider round"></span>
-							</label>
-						</div>
-					</div>
-					<div class="setting">
-						<div class="title">Serve ATOM feed</div>
-						<div class="value">
-							<label class="switch">
-								<input <% if(settings.CD_RSS) {% /> checked <% } %> id="CD_RSS" onchange="toggleState(this.id, this)" type="checkbox" />
-								<span class="slider round"></span>
-							</label>
-						</div>
-					</div>
-					<div class="setting">
-						<div class="title">Serve JSON feed</div>
-						<div class="value">
-							<label class="switch">
-								<input <% if(settings.CD_JSON) {% /> checked <% } %> id="CD_JSON" onchange="toggleState(this.id, this)" type="checkbox" />
-								<span class="slider round"></span>
-							</label>
-						</div>
-					</div>
-					<div class="setting">
-						<div class="title">Password minimum length</div>
-						<div class="value">
-							<input id="USER_MINIMUM_PASSWORD_LENGTH" value="<%- settings.USER_MINIMUM_PASSWORD_LENGTH -%>" onchange="changeValue(this.id, this)" type="number" />
-						</div>
-					</div>
-					<div class="setting">
-						<div class="title">Website Name</div>
-						<div class="value">
-							<input id="WEBSITE_NAME" value="<%- settings.WEBSITE_NAME -%>" onchange="changeValue(this.id, this)" type="text" />
-						</div>
-					</div>
-					<div class="setting largeset">
-						<div class="title">Custom head</div>
-						<div class="value">
-							<textarea id="CUSTOM_HEADER" onchange="changeValue(this.id, this)"><%= settings.CUSTOM_HEADER -%></textarea>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+  <head>
+    <%- include("partials/document-head.ejs") %>
+    <link rel="stylesheet" type="text/css" href="../css/settings.css" />
+    <link rel="stylesheet" type="text/css" href="../css/generic.css" />
+    <script src="/js/generic.js"></script>
+  </head>
+  <body>
+    <%- include("partials/header.ejs") %>
+    <div class="page">
+      <div class="page-center">
+        <div class="header"><%= website_name %> Admin Settings</div>
+        <div class="setting-list">
+          <div class="setting">
+            <div class="title">User registration</div>
+            <div class="value">
+              <label class="switch">
+                <input <% if(settings.ACCOUNT_REGISTRATION) {%> checked <% } %> id="ACCOUNT_REGISTRATION" onchange="toggleState(this.id, this)" type="checkbox" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting">
+            <div class="title">Hide "Login" in navigation bar</div>
+            <div class="value">
+              <label class="switch">
+                <input <% if(settings.HIDE_LOGIN) {%> checked <% } %> id="HIDE_LOGIN" onchange="toggleState(this.id, this)" type="checkbox" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting">
+            <div class="title">Serve ATOM feed</div>
+            <div class="value">
+              <label class="switch">
+                <input <% if(settings.CD_RSS) {%> checked <% } %> id="CD_RSS" onchange="toggleState(this.id, this)" type="checkbox" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting">
+            <div class="title">Serve JSON feed</div>
+            <div class="value">
+              <label class="switch">
+                <input <% if(settings.CD_JSON) {%> checked <% } %> id="CD_JSON" onchange="toggleState(this.id, this)" type="checkbox" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting">
+            <div class="title">Password minimum length</div>
+            <div class="value">
+              <input id="USER_MINIMUM_PASSWORD_LENGTH" value="<%- settings.USER_MINIMUM_PASSWORD_LENGTH -%>" onchange="changeValue(this.id, this)" type="number" />
+            </div>
+          </div>
+          <div class="setting">
+            <div class="title">Website Name</div>
+            <div class="value">
+              <input id="WEBSITE_NAME" value="<%- settings.WEBSITE_NAME -%>" onchange="changeValue(this.id, this)" type="text" />
+            </div>
+          </div>
+          <div class="setting largeset">
+            <div class="title">Custom head</div>
+            <div class="value">
+              <textarea id="CUSTOM_HEADER" onchange="changeValue(this.id, this)" ><%= settings.CUSTOM_HEADER -%></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-center">
+        <div class="header">Themes</div>
+        
+        <div class="theme-list">
+          <div class="add-theme-area">
+            <input id="theme-url" placeholder="Enter a git repository URL" type="text">
+            <button onclick="addTheme()">Add</button> 
+          </div>
+
+          <% for(theme of theme_data.installed) { %>
+            <!--  -->
+            <div class="entry <% if(theme == theme_data.current) {%> active <% } %>">
+            <div class="title"><%= theme %></div>
+            <div class="value">
+              <button onclick="setTheme('<%= theme %>')" type="button">Use</button>
+            </div>
+          </div>
+            <!--  -->
+          <% } %>
+
+
+        </div>
+      </div>
+    </div>
+
 
 		<%- include("partials/footer.ejs") %>
 	</body>
