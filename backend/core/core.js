@@ -7,6 +7,7 @@ let s3;
 const crypto = require("crypto");
 const validate = require("../form_validation");
 const permissions = require("../permissions");
+const bcrypt = require("bcrypt");
 const md = require("markdown-it")()
 	.use(require("markdown-it-underline"))
 	.use(require("markdown-it-footnote"))
@@ -100,23 +101,25 @@ async function getUser({ user_id, username, include_password = false }) {
 }
 // TODO: Rename patchUser
 async function editUser({ requester_id, user_id, user_content }) {
+	const valid_settings = ['display_name', 'password', 'role']; // Valid settings that can be changed
+
 	let user = await getUser({ user_id: user_id });
 	if (!user.success) return _r(false, "User not found");
 	user = user.data;
 
 	// TODO:
 	// If there was a role change, see if the acting user can make these changes
+	const setting_name = user_content.setting_name
+	if (!valid_settings.includes(setting_name)) return _r(false, "Invalid setting.");
 
-	// TODO:
-	// If there was a password change,
-	// check to see if the user can make these changes
-	// Hash the password
+	if (setting_name == 'password'){
+		user_content.value = await bcrypt.hash(user_content.value, 10);
+	}
 
-	// FIXME: Not secure. ASAP!
 	let formatted = {};
-	formatted[user_content.setting_name] = user_content.value;
+	formatted[setting_name] = user_content.value;
 
-	await prisma.user.update({ where: { id: user.id }, data: formatted });
+	await prisma.user.update({ where: { id: user.id }, data: formatted })
 	return _r(true);
 }
 async function deleteUser({ user_id }) {
