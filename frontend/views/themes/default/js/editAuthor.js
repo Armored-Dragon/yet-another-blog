@@ -8,7 +8,7 @@ async function changeValue(setting_name, element) {
 
 	// TODO: On failure, notify the user
 	if (response.body.success) {
-		alert("Successfully changed password");
+		alert("Successfully changed setting.");
 	}
 }
 const change_password_dialog = qs("#change-password-dialog");
@@ -29,9 +29,19 @@ function changePasswordInputUpdate() {
 	return (status.innerHTML = "&nbsp;");
 }
 
-function sendPasswordUpdate() {
+async function sendPasswordUpdate() {
 	const new_password_1 = qs("#cp-new-1");
-	// Check fields match
-	// Send post update
-	changeValue("password", new_password_1);
+	const original_password_value = qs("#cp-current").value
+
+	const form = {
+		setting_name: "password",
+		value: new_password_1.value,
+		original_password: original_password_value,
+		id: window.location.href.split("/")[4],
+	};
+	const response = await request(`/api/web/user`, "PATCH", form);
+
+	if (response.body.success) {
+		alert("Successfully changed password");
+	}
 }

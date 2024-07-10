@@ -103,7 +103,7 @@ async function getUser({ user_id, username, include_password = false }) {
 async function editUser({ requester_id, user_id, user_content }) {
 	const valid_settings = ['display_name', 'password', 'role']; // Valid settings that can be changed
 
-	let user = await getUser({ user_id: user_id });
+	let user = await getUser({ user_id: user_id, include_password: true });
 	if (!user.success) return _r(false, "User not found");
 	user = user.data;
 
@@ -113,6 +113,11 @@ async function editUser({ requester_id, user_id, user_content }) {
 	if (!valid_settings.includes(setting_name)) return _r(false, "Invalid setting.");
 
 	if (setting_name == 'password'){
+		// Check if current password value is correct
+		const password_match = await bcrypt.compare(user_content.original_password, user.password);
+		if (!password_match) return _r(false, "Incorrect password")
+
+		// If successful, compute new password hash
 		user_content.value = await bcrypt.hash(user_content.value, 10);
 	}
 
