@@ -626,10 +626,11 @@ async function editSetting({ name, value }) {
 	if (!Object.keys(settings).includes(name)) return _r(false, "Setting is not valid");
 
 	await prisma.setting.upsert({ where: { id: name }, update: { value: value }, create: { id: name, value: value } });
+
 	try {
-		settings[key] = JSON.parse(value);
+		settings[name] = JSON.parse(value);
 	} catch {
-		settings[key] = value;
+		settings[name] = value;
 	}
 
 	return _r(true);
