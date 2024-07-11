@@ -25,7 +25,7 @@
           <%- post.content %>
         </div>
         <div class="about">
-          <div class="profile-picture"><img src="<%= post.profile_picture %>" /></div>
+          <div class="profile-picture"><img src="<%= post.profile_image || "/img/hourglass.svg" %>" /></div>
           <div class="displayname"><%= post.owner.display_name || post.owner.username %></div>
           <!-- TODO: Format Date/time -->
           <div class="stat">Registered <%= post.created_date.toLocaleString('en-US', { dateStyle:'medium' }) || "Null" %></div>

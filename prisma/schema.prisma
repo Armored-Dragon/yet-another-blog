@@ -15,6 +15,7 @@ model User {
   username     String  @unique
   password     String
   display_name String?
+  profile_image String? 
 
   role Role @default(USER)
 

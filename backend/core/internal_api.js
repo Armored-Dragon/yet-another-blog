@@ -46,7 +46,8 @@ async function postSetting(request, response) {
 async function postImage(request, response) {
 	// TODO: Permissions for uploading images
 	// TODO: Verification for image uploading
-	return response.json(await core.uploadMedia({ parent_id: request.body.post_id, parent_type: request.body.parent_type, file_buffer: request.body.buffer, content_type: request.body.content_type }));
+	// FIXME: Naming
+	return response.json(await core.uploadMedia({ parent_id: request.body.post_id || request.body.parent_id, parent_type: request.body.parent_type, file_buffer: request.body.buffer, content_type: request.body.content_type }));
 }
 async function deleteImage(req, res) {
 	// TODO: Permissions for deleting image

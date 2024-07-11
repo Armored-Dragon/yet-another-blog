@@ -45,14 +45,16 @@ async function login(request, response) {
 	response.render(_getThemePage("login"), await getDefaults(request));
 }
 async function author(req, res) {
-	const user = await core.getUser({ user_id: req.params.author_id });
+	let user = await core.getUser({ user_id: req.params.author_id });
 	// FIXME: Bandage fix for author get error
 	if (!user.success) return res.redirect("/");
-	const profile = await core.getBiography({ author_id: user.data.id });
+	user = user.data;
+	const profile = await core.getBiography({ author_id: user.id });
 	// TODO: Check for success
-	const posts = await core.getPost({ requester_id: user.data.id });
+	const posts = await core.getPost({ requester_id: user.id });
+	const profile_image = await core.getMedia({ parent_id: user.id, parent_type: "user", file_name: user.profile_image });
 
-	res.render(_getThemePage("author"), { ...(await getDefaults(req)), post: { ...profile.data, post_count: posts.data.length } });
+	res.render(_getThemePage("author"), { ...(await getDefaults(req)), post: { ...profile.data, post_count: posts.data.length, profile_image: profile_image } });
 }
 async function authorEdit(request, response) {
 	let author = await core.getBiography({ author_id: request.params.author_id });

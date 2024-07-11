@@ -101,7 +101,7 @@ async function getUser({ user_id, username, include_password = false }) {
 }
 // TODO: Rename patchUser
 async function editUser({ requester_id, user_id, user_content }) {
-	const valid_settings = ['display_name', 'password', 'role']; // Valid settings that can be changed
+	const valid_settings = ["display_name", "password", "role", "profile_image"]; // Valid settings that can be changed
 
 	let user = await getUser({ user_id: user_id, include_password: true });
 	if (!user.success) return _r(false, "User not found");
@@ -109,22 +109,35 @@ async function editUser({ requester_id, user_id, user_content }) {
 
 	// TODO:
 	// If there was a role change, see if the acting user can make these changes
-	const setting_name = user_content.setting_name
+	const setting_name = user_content.setting_name;
 	if (!valid_settings.includes(setting_name)) return _r(false, "Invalid setting.");
 
-	if (setting_name == 'password'){
+	if (setting_name == "password") {
 		// Check if current password value is correct
 		const password_match = await bcrypt.compare(user_content.original_password, user.password);
-		if (!password_match) return _r(false, "Incorrect password")
+		if (!password_match) return _r(false, "Incorrect password");
 
 		// If successful, compute new password hash
 		user_content.value = await bcrypt.hash(user_content.value, 10);
 	}
 
+	if (setting_name == "profile_image") {
+		const folder_params = { Bucket: process.env.S3_BUCKET_NAME, Prefix: `${process.env.ENVIRONMENT}/user/${user.id}` };
+		const listed_objects = await s3.send(new ListObjectsCommand(folder_params));
+
+		const all_media = listed_objects.Contents;
+		for (let i = 0; all_media.length > i; i++) {
+			if (all_media[i].Key.includes(user_content.value)) continue;
+
+			// Delete other profile pictures
+			deleteMedia({ parent_id: user.id, parent_type: "user", file_name: all_media[i].Key.split("/")[3] });
+		}
+	}
+
 	let formatted = {};
 	formatted[setting_name] = user_content.value;
 
-	await prisma.user.update({ where: { id: user.id }, data: formatted })
+	await prisma.user.update({ where: { id: user.id }, data: formatted });
 	return _r(true);
 }
 async function deleteUser({ user_id }) {
@@ -683,4 +696,4 @@ const _r = (s, m) => {
 	return { success: s, message: m };
 };
 
-module.exports = { settings, newUser, getUser, editUser, getPost, newPost, editPost, deletePost, getBiography, updateBiography, uploadMedia, getTags, postSetting, getSetting, installTheme, deleteTheme };
+module.exports = { settings, newUser, getUser, editUser, getPost, newPost, editPost, deletePost, getBiography, updateBiography, uploadMedia, getTags, postSetting, getSetting, installTheme, deleteTheme, getMedia };
