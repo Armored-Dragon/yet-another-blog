@@ -22,6 +22,12 @@ deploy_migrations() {
   npx prisma migrate deploy
 }
 
+# Function to push the Prisma database
+push_database() {
+  echo "Pushing the database..."
+  npx prisma db push
+}
+
 # Wait for the database to be ready
 wait_for_db
 
@@ -30,6 +36,9 @@ generate_prisma
 
 # Deploy Prisma migrations
 deploy_migrations
+
+# Push the database
+push_database
 
 # Start the application
 echo "Starting the application..."

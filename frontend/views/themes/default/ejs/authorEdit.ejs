@@ -8,6 +8,29 @@
     <title>Yet-Another-Blog</title>
   </head>
   <body>
+    <dialog id="change-password-dialog">
+			<div class="title">
+				<span>Change Password</span>
+			</div>
+			<div class="entry">
+				<div>Current password</div>
+				<input id="cp-current" type="password" oninput="changePasswordInputUpdate()" />
+			</div>
+			<div class="entry">
+				<div>New password</div>
+				<input id="cp-new-1" type="password" oninput="changePasswordInputUpdate()" />
+			</div>
+			<div class="entry">
+				<div>Confirm password</div>
+				<input id="cp-new-2" type="password" oninput="changePasswordInputUpdate()" />
+			</div>
+			<div class="status">Please enter your current password.</div>
+			<div class="horizontal-button-container">
+				<button class="button good" onclick="sendPasswordUpdate()">Accept</button>
+				<button id="cp-cancel" class="button bad">Cancel</button>
+			</div>
+		</dialog>
+
     <%- include("partials/header.ejs") %>
     <div class="page">
       <div class="page-center">
@@ -21,7 +44,7 @@
           </div>
           <div class="setting">
             <div class="title">Change Password</div>
-            <button class="button bad"><span>Open Dialog</span></button>
+            <button id="change-password-button" class="button bad"><span>Open Dialog</span></button>
           </div>
           <div class="setting">
             <div class="title">Change Profile Picture</div>

@@ -7,6 +7,7 @@ let s3;
 const crypto = require("crypto");
 const validate = require("../form_validation");
 const permissions = require("../permissions");
+const bcrypt = require("bcrypt");
 const md = require("markdown-it")()
 	.use(require("markdown-it-underline"))
 	.use(require("markdown-it-footnote"))
@@ -17,6 +18,8 @@ const md = require("markdown-it")()
 			symbol: `⮺`,
 		}),
 	});
+
+/* global Buffer */
 
 let settings = {
 	SETUP_COMPLETE: false,
@@ -100,21 +103,41 @@ async function getUser({ user_id, username, include_password = false }) {
 }
 // TODO: Rename patchUser
 async function editUser({ requester_id, user_id, user_content }) {
-	let user = await getUser({ user_id: user_id });
+	const valid_settings = ["display_name", "password", "role", "profile_image"]; // Valid settings that can be changed
+
+	let user = await getUser({ user_id: user_id, include_password: true });
 	if (!user.success) return _r(false, "User not found");
 	user = user.data;
 
 	// TODO:
 	// If there was a role change, see if the acting user can make these changes
+	const setting_name = user_content.setting_name;
+	if (!valid_settings.includes(setting_name)) return _r(false, "Invalid setting.");
 
-	// TODO:
-	// If there was a password change,
-	// check to see if the user can make these changes
-	// Hash the password
+	if (setting_name == "password") {
+		// Check if current password value is correct
+		const password_match = await bcrypt.compare(user_content.original_password, user.password);
+		if (!password_match) return _r(false, "Incorrect password");
 
-	// FIXME: Not secure. ASAP!
+		// If successful, compute new password hash
+		user_content.value = await bcrypt.hash(user_content.value, 10);
+	}
+
+	if (setting_name == "profile_image") {
+		const folder_params = { Bucket: process.env.S3_BUCKET_NAME, Prefix: `${process.env.ENVIRONMENT}/user/${user.id}` };
+		const listed_objects = await s3.send(new ListObjectsCommand(folder_params));
+
+		const all_media = listed_objects.Contents;
+		for (let i = 0; all_media.length > i; i++) {
+			if (all_media[i].Key.includes(user_content.value)) continue;
+
+			// Delete other profile pictures
+			deleteMedia({ parent_id: user.id, parent_type: "user", file_name: all_media[i].Key.split("/")[3] });
+		}
+	}
+
 	let formatted = {};
-	formatted[user_content.setting_name] = user_content.value;
+	formatted[setting_name] = user_content.value;
 
 	await prisma.user.update({ where: { id: user.id }, data: formatted });
 	return _r(true);
@@ -139,14 +162,14 @@ async function newPost({ requester_id }) {
 
 	return post.id;
 }
-async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {}, { search, search_title, search_content, search_tags } = {}, { limit = 10, page = 0, pagination = true } = {}) {
+async function getPost({ requester_id, owner_id, post_id, visibility = "PUBLISHED" } = {}, { search, search_title, search_content, search_tags } = {}, { limit = 10, page = 0, pagination = true } = {}) {
 	let where_object = {
 		OR: [
 			// Standard discovery: Public, and after the publish date
 			{
 				AND: [
 					{
-						visibility: "PUBLISHED",
+						visibility: visibility,
 					},
 					{
 						publish_date: {
@@ -209,6 +232,10 @@ async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {},
 	let post_list = [];
 
 	// Build the "where_object" object
+	if (owner_id) {
+		where_object["AND"].push({ owner: { id: owner_id } });
+	}
+
 	if (search) {
 		if (search_tags) where_object["AND"][0]["OR"].push({ tags: { some: { name: search?.toLowerCase() } } });
 		if (search_title) where_object["AND"][0]["OR"].push({ title: { contains: search, mode: "insensitive" } });
@@ -368,10 +395,10 @@ async function updateBiography({ requester_id, author_id, biography_content }) {
 
 	return _r(true);
 }
-async function uploadMedia({ parent_id, parent_type, file_buffer, content_type }) {
+async function uploadMedia({ parent_id, parent_type, file_buffer, content_type }, { resolution_override }) {
 	if (!use_s3_storage) return null;
 	const content_name = crypto.randomUUID();
-	let maximum_image_resolution = { width: 1920, height: 1080 };
+	let maximum_image_resolution = resolution_override || { width: 1920, height: 1080 };
 
 	// Images
 	const compressed_image = await sharp(Buffer.from(file_buffer.split(",")[1], "base64"), { animated: true })
@@ -623,10 +650,11 @@ async function editSetting({ name, value }) {
 	if (!Object.keys(settings).includes(name)) return _r(false, "Setting is not valid");
 
 	await prisma.setting.upsert({ where: { id: name }, update: { value: value }, create: { id: name, value: value } });
+
 	try {
-		settings[key] = JSON.parse(value);
+		settings[name] = JSON.parse(value);
 	} catch {
-		settings[key] = value;
+		settings[name] = value;
 	}
 
 	return _r(true);
@@ -674,4 +702,4 @@ const _r = (s, m) => {
 	return { success: s, message: m };
 };
 
-module.exports = { settings, newUser, getUser, editUser, getPost, newPost, editPost, deletePost, getBiography, updateBiography, uploadMedia, getTags, postSetting, getSetting, installTheme, deleteTheme };
+module.exports = { settings, newUser, getUser, editUser, getPost, newPost, editPost, deletePost, getBiography, updateBiography, uploadMedia, getTags, postSetting, getSetting, installTheme, deleteTheme, getMedia };

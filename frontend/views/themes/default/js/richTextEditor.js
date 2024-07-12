@@ -86,16 +86,3 @@ function _readFile(file) {
   });
 }
 
-async function updateBiography() {
-  let form_data = {
-    media: media,
-    content: qs("#post-content").value,
-    id: window.location.href.split("/")[4],
-  };
-
-  const post_response = await request("/api/web/biography", "PATCH", form_data);
-
-  if (post_response.body.success) {
-    window.location.href = `/post/${post_response.body.post_id}`;
-  }
-}

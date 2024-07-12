@@ -13,7 +13,5 @@ COPY . .
 EXPOSE 5004
 
 COPY wait-for-db.sh /usr/local/bin/wait-for-db.sh
-
 RUN chmod +x /usr/local/bin/wait-for-db.sh
-
 CMD ["/usr/local/bin/wait-for-db.sh"]
