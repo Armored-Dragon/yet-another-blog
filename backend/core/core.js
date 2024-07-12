@@ -160,14 +160,14 @@ async function newPost({ requester_id }) {
 
 	return post.id;
 }
-async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {}, { search, search_title, search_content, search_tags } = {}, { limit = 10, page = 0, pagination = true } = {}) {
+async function getPost({ requester_id, owner_id, post_id, visibility = "PUBLISHED" } = {}, { search, search_title, search_content, search_tags } = {}, { limit = 10, page = 0, pagination = true } = {}) {
 	let where_object = {
 		OR: [
 			// Standard discovery: Public, and after the publish date
 			{
 				AND: [
 					{
-						visibility: "PUBLISHED",
+						visibility: visibility,
 					},
 					{
 						publish_date: {
@@ -230,6 +230,10 @@ async function getPost({ requester_id, post_id, visibility = "PUBLISHED" } = {},
 	let post_list = [];
 
 	// Build the "where_object" object
+	if (owner_id) {
+		where_object["AND"].push({ owner: { id: owner_id } });
+	}
+
 	if (search) {
 		if (search_tags) where_object["AND"][0]["OR"].push({ tags: { some: { name: search?.toLowerCase() } } });
 		if (search_title) where_object["AND"][0]["OR"].push({ title: { contains: search, mode: "insensitive" } });

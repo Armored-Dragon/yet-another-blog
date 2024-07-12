@@ -51,7 +51,7 @@ async function author(req, res) {
 	user = user.data;
 	const profile = await core.getBiography({ author_id: user.id });
 	// TODO: Check for success
-	const posts = await core.getPost({ requester_id: user.id });
+	const posts = await core.getPost({ owner_id: user.id, visibility: "PUBLISHED" });
 	const profile_image = await core.getMedia({ parent_id: user.id, parent_type: "user", file_name: user.profile_image });
 
 	res.render(_getThemePage("author"), { ...(await getDefaults(req)), post: { ...profile.data, post_count: posts.data.length, profile_image: profile_image } });

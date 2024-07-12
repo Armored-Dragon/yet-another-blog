@@ -1,3 +1,5 @@
+/* global qs request */
+
 async function changeValue(setting_name, value) {
 	const form = {
 		setting_name: setting_name,
