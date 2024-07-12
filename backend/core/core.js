@@ -19,6 +19,8 @@ const md = require("markdown-it")()
 		}),
 	});
 
+/* global Buffer */
+
 let settings = {
 	SETUP_COMPLETE: false,
 	ACCOUNT_REGISTRATION: false,
@@ -393,10 +395,10 @@ async function updateBiography({ requester_id, author_id, biography_content }) {
 
 	return _r(true);
 }
-async function uploadMedia({ parent_id, parent_type, file_buffer, content_type }) {
+async function uploadMedia({ parent_id, parent_type, file_buffer, content_type }, { resolution_override }) {
 	if (!use_s3_storage) return null;
 	const content_name = crypto.randomUUID();
-	let maximum_image_resolution = { width: 1920, height: 1080 };
+	let maximum_image_resolution = resolution_override || { width: 1920, height: 1080 };
 
 	// Images
 	const compressed_image = await sharp(Buffer.from(file_buffer.split(",")[1], "base64"), { animated: true })

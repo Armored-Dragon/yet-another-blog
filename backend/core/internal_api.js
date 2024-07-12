@@ -47,7 +47,10 @@ async function postImage(request, response) {
 	// TODO: Permissions for uploading images
 	// TODO: Verification for image uploading
 	// FIXME: Naming
-	return response.json(await core.uploadMedia({ parent_id: request.body.post_id || request.body.parent_id, parent_type: request.body.parent_type, file_buffer: request.body.buffer, content_type: request.body.content_type }));
+	let resolution_override;
+	if (request.body.parent_type === "user") resolution_override = { width: 500, height: 500 };
+
+	return response.json(await core.uploadMedia({ parent_id: request.body.post_id || request.body.parent_id, parent_type: request.body.parent_type, file_buffer: request.body.buffer, content_type: request.body.content_type }, { resolution_override: resolution_override }));
 }
 async function deleteImage(req, res) {
 	// TODO: Permissions for deleting image
