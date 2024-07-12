@@ -1,7 +1,7 @@
 async function changeValue(setting_name, value) {
 	const form = {
 		setting_name: setting_name,
-		value: value,
+		value: value.value || value,
 		id: window.location.href.split("/")[4],
 	};
 	const response = await request(`/api/web/user`, "PATCH", form);
